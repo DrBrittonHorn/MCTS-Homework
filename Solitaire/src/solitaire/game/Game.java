@@ -12,6 +12,7 @@ public final class Game {
 	Random rand = new Random();
 	public List<Position> board;
 	public int turn = 1, boardWidth = 7, boardHeight = 20;
+	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>();
 	// flipped cards
@@ -22,13 +23,13 @@ public final class Game {
 	public List<Card> foundationHeart = new ArrayList<Card>();
 	public List<Card> foundationDiamond = new ArrayList<Card>();
 	// the board cards
+	public List<Card> tab0 = new ArrayList<Card>();
 	public List<Card> tab1 = new ArrayList<Card>();
 	public List<Card> tab2 = new ArrayList<Card>();
 	public List<Card> tab3 = new ArrayList<Card>();
 	public List<Card> tab4 = new ArrayList<Card>();
 	public List<Card> tab5 = new ArrayList<Card>();
 	public List<Card> tab6 = new ArrayList<Card>();
-	public List<Card> tab7 = new ArrayList<Card>();
 	private boolean gameOver;
 	
 	public Game() {
@@ -41,6 +42,15 @@ public final class Game {
 				board.add(new Position(x, y, new GamePiece(false,0, null)));
 			}
 		}
+		// add deck position
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), true, false, false, -1));
+		// add waste position
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, true, false, -1));
+		// add four foundation positions
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 0));
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 1));
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 2));
+		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 3));
 		
 		// Generate all cards
 		for (Suit s : Suit.values())
@@ -53,7 +63,7 @@ public final class Game {
 		}
 		// Shuffle
 		Collections.shuffle(deck);
-		// Randomly place cards
+		// Place cards
 		for (int tab = 0; tab < boardWidth; tab++)
 		{
 			for (int stackHeight = tab; stackHeight < 7; stackHeight++)
@@ -61,6 +71,13 @@ public final class Game {
 				board.get((stackHeight * boardHeight) + tab).setPiece(new GamePiece(tab == stackHeight ? true : false,1,deck.get(0)));
 				deck.remove(0);
 			}
+		}
+		
+		// for testing purposes only
+		for (int addCard = 7; addCard < 11; addCard++)
+		{
+			board.get((6 * boardHeight) + addCard).setPiece(new GamePiece(true,1,deck.get(0)));
+			deck.remove(0);
 		}
 	}
 	
@@ -86,7 +103,7 @@ public final class Game {
 	
 	protected void advanceGame(Position move)
 	{
-		if (gameOver)
+		/*if (gameOver)
 			return;
 		if (board.get((move.getX() * boardHeight) + move.getY()).getPiece().getOwner() != 0)
 		{
@@ -101,7 +118,7 @@ public final class Game {
 			return;
 		}
 
-		turn *= -1;
+		turn *= -1;*/
 		return;
 	}
 	

@@ -81,7 +81,7 @@ public class Executor {
 		});
 		
 		long start = System.currentTimeMillis();
-		/*
+		
 		while (!game.gameOver())
 		{
 			game.advanceGame(agent1.getMove(game, runTime));
@@ -105,7 +105,7 @@ public class Executor {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		*/
+		
 		gv.repaint();
 	}
 

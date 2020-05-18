@@ -41,6 +41,8 @@ public final class GameView extends JComponent
 	private static final String imageLoc = "res/";
 	private List<Image> clubs = new ArrayList<>(), spades = new ArrayList<>(), hearts = new ArrayList<>(),
 			diamonds = new ArrayList<>(), cardBacks = new ArrayList<>();
+	private int highlightX = -1, highlightY = -1;
+	private boolean isActiveSelection, isWasteSelected, isF0Selected, isF1Selected, isF2Selected, isF3Selected;
 	
 	// bounding boxes for clicks
 	private int deckX, deckY, wasteX, wasteY, f0X, f0Y, f1X, f1Y, f2X, f2Y, f3X, f3Y,
@@ -111,7 +113,7 @@ public final class GameView extends JComponent
 				stringRank = Integer.toString(rank);
 				break;
 		}
-		System.out.println(imageLoc + stringRank + suit + ".png");
+		//System.out.println(imageLoc + stringRank + suit + ".png");
 		cardList.add(Toolkit.getDefaultToolkit().createImage(imageLoc + stringRank + suit + ".png"));
 	}
 	
@@ -161,7 +163,7 @@ public final class GameView extends JComponent
 		drawBoard(g2d);
 		drawPieces(g2d);
 		drawDeck(g2d);
-		drawDiscard(g2d);
+		drawWaste(g2d);
 	}
 
 	private void drawBoard(Graphics2D g2d)
@@ -175,9 +177,17 @@ public final class GameView extends JComponent
 		deckX = bufferW;
 		deckY = bufferH;
 		bufferGraphics.drawRect(deckX, deckY, pieceWidth, pieceHeight);
+		if (isWasteSelected)
+		{
+			bufferGraphics.setColor(Color.RED);
+		}
 		wasteX = bufferW+pieceWidth+foundationBuffer;
 		wasteY = bufferH;
 		bufferGraphics.drawRect(wasteX, wasteY, pieceWidth, pieceHeight);
+		if (isWasteSelected)
+		{
+			bufferGraphics.setColor(Color.WHITE);
+		}
 		// outline foundations
 		IntStream.iterate(0, i -> i + 1).limit(4).forEach(i -> drawFoundation(i, g2d));
 		// outline tabulars
@@ -262,7 +272,7 @@ public final class GameView extends JComponent
 		}
 	}
 
-	private void drawDiscard(Graphics2D g2d)
+	private void drawWaste(Graphics2D g2d)
 	{
 		if (game.waste.size() > 0)
 		{
@@ -336,78 +346,260 @@ public final class GameView extends JComponent
 	protected void handleMouseClick(int x, int y, Agent human)
 	{
 		if (human == null) return;
-		System.out.println(x + "::" + y);
+		//System.out.println(x + "::" + y);
 		Human h = (Human) human;
-		
+		Position posClick = null;
 		// check click on deck
 		if (y >= deckY && y <= deckY + pieceHeight
 				&& x >= deckX && x <= deckX + pieceWidth)
 		{
 			System.out.println("Clicked on deck");
+			posClick = game.getBoard().get(game.deckPos);
 		}
+		
 		// check click on waste
 		if (y >= wasteY && y <= wasteY + pieceHeight
 				&& x >= wasteX && x <= wasteX + pieceWidth)
 		{
-			System.out.println("Clicked on waste");
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on waste w/o active selection");
+				isActiveSelection = true;
+				isWasteSelected = true;
+			}
+			else if (isWasteSelected)
+			{
+				System.out.println("Clicked on waste w/ existing selection");
+				isActiveSelection = false;
+				isWasteSelected = false;
+			}
+			posClick = game.getBoard().get(game.wastePos);
 		}
+		
 		// check click on foundations
 		if (y >= f0Y && y <= f0Y + pieceHeight
 				&& x >= f0X && x <= f0X + pieceWidth)
 		{
-			System.out.println("Clicked on foundation 0");
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on F0 w/o active selection");
+				isActiveSelection = true;
+				isF0Selected = true;
+			}
+			else if (isF0Selected)
+			{
+				System.out.println("Clicked on F0 w/ existing selection");
+				isActiveSelection = false;
+				isF0Selected = false;
+			}
+			posClick = game.getBoard().get(game.f0Pos);
 		}
-		if (y >= f1Y && y <= f1Y + pieceHeight
+		else if (y >= f1Y && y <= f1Y + pieceHeight
 				&& x >= f1X && x <= f1X + pieceWidth)
 		{
-			System.out.println("Clicked on foundation 1");
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on F1 w/o active selection");
+				isActiveSelection = true;
+				isF1Selected = true;
+			}
+			else if (isF1Selected)
+			{
+				System.out.println("Clicked on F1 w/ existing selection");
+				isActiveSelection = false;
+				isF1Selected = false;
+			}
+			posClick = game.getBoard().get(game.f1Pos);
 		}
-		if (y >= f2Y && y <= f2Y + pieceHeight
+		else if (y >= f2Y && y <= f2Y + pieceHeight
 				&& x >= f2X && x <= f2X + pieceWidth)
 		{
-			System.out.println("Clicked on foundation 2");
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on F2 w/o active selection");
+				isActiveSelection = true;
+				isF2Selected = true;
+			}
+			else if (isF2Selected)
+			{
+				System.out.println("Clicked on F2 w/ existing selection");
+				isActiveSelection = false;
+				isF2Selected = false;
+			}
+			posClick = game.getBoard().get(game.f2Pos);
 		}
-		if (y >= f3Y && y <= f3Y + pieceHeight
+		else if (y >= f3Y && y <= f3Y + pieceHeight
 				&& x >= f3X && x <= f3X + pieceWidth)
 		{
-			System.out.println("Clicked on foundation 3");
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on F3 w/o active selection");
+				isActiveSelection = true;
+				isF3Selected = true;
+			}
+			else if (isF3Selected)
+			{
+				System.out.println("Clicked on F3 w/ existing selection");
+				isActiveSelection = false;
+				isF3Selected = false;
+			}
+			posClick = game.getBoard().get(game.f3Pos);
 		}
+		
 		// check click on tabular (later check for individual card)
-		if (y >= t0Y && y <= t0Y + pieceHeight
+		if (y >= t0Y
 				&& x >= t0X && x <= t0X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 0");
+			
+			posClick = getPositionFromClick(0,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 0, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(0);
+				System.out.println("Augmented. Clicked on tabular 0, card " + posClick.getY());
+			}
 		}
-		if (y >= t1Y && y <= t1Y + pieceHeight
+		else if (y >= t1Y
 				&& x >= t1X && x <= t1X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 1");
+			
+			posClick = getPositionFromClick(1,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 1, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(1);
+				System.out.println("Augmented. Clicked on tabular 1, card " + posClick.getY());
+			}
 		}
-		if (y >= t2Y && y <= t2Y + pieceHeight
+		else if (y >= t2Y
 				&& x >= t2X && x <= t2X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 2");
+			
+			posClick = getPositionFromClick(2,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 2, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(2);
+				System.out.println("Augmented. Clicked on tabular 2, card " + posClick.getY());
+			}
 		}
-		if (y >= t3Y && y <= t3Y + pieceHeight
+		else if (y >= t3Y
 				&& x >= t3X && x <= t3X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 3");
+			
+			posClick = getPositionFromClick(3,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 3, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(3);
+				System.out.println("Augmented. Clicked on tabular 3, card " + posClick.getY());
+			}
 		}
-		if (y >= t4Y && y <= t4Y + pieceHeight
+		else if (y >= t4Y
 				&& x >= t4X && x <= t4X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 4");
+			
+			posClick = getPositionFromClick(4,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 4, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(4);
+				System.out.println("Augmented. Clicked on tabular 4, card " + posClick.getY());
+			}
 		}
-		if (y >= t5Y && y <= t5Y + pieceHeight
+		if (y >= t5Y
 				&& x >= t5X && x <= t5X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 5");
+			
+			posClick = getPositionFromClick(5,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 5, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(5);
+				System.out.println("Augmented. Clicked on tabular 5, card " + posClick.getY());
+			}
 		}
-		if (y >= t6Y && y <= t6Y + pieceHeight
+		else if (y >= t6Y
 				&& x >= t6X && x <= t6X + pieceWidth)
 		{
-			System.out.println("Clicked on tabular 6");
+			
+			posClick = getPositionFromClick(6,y);
+			if (posClick.getPiece().isFlipped())
+			{
+				System.out.println("Clicked on tabular 6, card " + posClick.getY());
+			}
+			else
+			{
+				posClick = getLastFlippedCardInTab(6);
+				System.out.println("Augmented. Clicked on tabular 6, card " + posClick.getY());
+			}
 		}
+	}
+	
+	private Position getLastFlippedCardInTab(int tab)
+	{
+		for (int y = game.getBoardHeight() - 1; y>= 0; y--)
+		{
+			Position tmpPos = game.getBoard().get((tab*game.getBoardHeight()) + y);
+			GamePiece piece = tmpPos.getPiece();
+			if (piece.getCard() != null)
+			{
+				if (piece.isFlipped())
+					return tmpPos;
+				else
+					return null;
+			}
+		}
+		return null;
+	}
+	
+	private Position getPositionFromClick(int tab, int yVal)
+	{
+		int numCards = 0;
+		for (int y = 0; y < game.getBoardHeight(); y++)
+		{
+			GamePiece piece = game.board.get((tab * game.getBoardHeight()) + y).getPiece();
+			if (piece.getCard() != null)
+			{
+				numCards++;
+				//System.out.println("Card: " + piece.getCard().toString());
+			}
+			else
+				break;
+		}
+		int chosenCard = -1;
+		if (yVal >= tabularStartY + ((numCards-1)*cardStackOffset)
+				&& yVal <= pieceHeight + tabularStartY + ((numCards-1)*cardStackOffset))
+		{
+			chosenCard = numCards - 1;
+			//System.out.println("Clicked on bottom card");
+		}
+		else if (yVal < tabularStartY + ((numCards-1)*cardStackOffset))
+		{
+			int card = (yVal - tabularStartY) / cardStackOffset;
+			chosenCard = card;
+			System.out.println("cardChosen: " + card);
+		}
+		else return null;
+		return game.board.get((tab * game.getBoardHeight()) + chosenCard);
 	}
 
 	/**

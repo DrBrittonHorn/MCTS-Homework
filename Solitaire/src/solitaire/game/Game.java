@@ -1,0 +1,269 @@
+package solitaire.game;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import solitaire.agent.Agent;
+import solitaire.agent.Human;
+
+public final class Game {
+	Random rand = new Random();
+	public List<Position> board;
+	public int turn = 1, boardWidth = 7, boardHeight = 20;
+	// unflipped cards
+	public List<Card> deck = new ArrayList<Card>();
+	// flipped cards
+	public List<Card> waste = new ArrayList<Card>();
+	// cards placed at top. Goes from Ace to K for each suit
+	public List<Card> foundationSpade = new ArrayList<Card>();
+	public List<Card> foundationClub = new ArrayList<Card>();
+	public List<Card> foundationHeart = new ArrayList<Card>();
+	public List<Card> foundationDiamond = new ArrayList<Card>();
+	// the board cards
+	public List<Card> tab1 = new ArrayList<Card>();
+	public List<Card> tab2 = new ArrayList<Card>();
+	public List<Card> tab3 = new ArrayList<Card>();
+	public List<Card> tab4 = new ArrayList<Card>();
+	public List<Card> tab5 = new ArrayList<Card>();
+	public List<Card> tab6 = new ArrayList<Card>();
+	public List<Card> tab7 = new ArrayList<Card>();
+	private boolean gameOver;
+	
+	public Game() {
+		// Initialize all positions to be blank
+		board = new ArrayList<Position>();
+		for (int x = 0; x < boardWidth; x++)
+		{
+			for (int y = 0; y < boardHeight; y++)
+			{
+				board.add(new Position(x, y, new GamePiece(false,0, null)));
+			}
+		}
+		
+		// Generate all cards
+		for (Suit s : Suit.values())
+		{
+			for (int i = 1; i <= 13; i++)
+			{
+				Card c = new Card(i, s);
+				deck.add(c);
+			}
+		}
+		// Shuffle
+		Collections.shuffle(deck);
+		// Randomly place cards
+		for (int tab = 0; tab < boardWidth; tab++)
+		{
+			for (int stackHeight = tab; stackHeight < 7; stackHeight++)
+			{
+				board.get((stackHeight * boardHeight) + tab).setPiece(new GamePiece(tab == stackHeight ? true : false,1,deck.get(0)));
+				deck.remove(0);
+			}
+		}
+	}
+	
+	public List<Position> getBoard()
+	{
+		return this.board;
+	}
+	
+	public int getBoardWidth()
+	{
+		return this.boardWidth;
+	}
+	
+	public int getBoardHeight()
+	{
+		return this.boardHeight;
+	}
+	
+	public int getTurn()
+	{
+		return this.turn;
+	}
+	
+	protected void advanceGame(Position move)
+	{
+		if (gameOver)
+			return;
+		if (board.get((move.getX() * boardHeight) + move.getY()).getPiece().getOwner() != 0)
+		{
+			System.out.println("Piece exists. Ignoring.");
+			return;
+		}
+		board.get((move.getX() * boardHeight) + move.getY()).getPiece().setOwner(turn);
+		
+		if (isWinningBoard(this.board) != 0 || getValidMoves(this.board, turn).isEmpty())
+		{
+			gameOver = true;
+			return;
+		}
+
+		turn *= -1;
+		return;
+	}
+	
+	public int isWinningBoard(List<Position> origBoard)
+	{
+		int[][] tempBoard = new int[boardWidth][boardHeight];
+		for (int x = 0; x < boardWidth; x++)
+		{
+			for (int y = 0; y < boardHeight; y++)
+			{
+				tempBoard[x][y] = origBoard.get((x * boardHeight) + y).getPiece().getOwner();
+			}
+		}
+		checkValidBoard(tempBoard);
+		// vertical win conditions
+		for (int i = 0; i < 3; i++)
+		{
+			if (tempBoard[i][0] + tempBoard[i][1] + tempBoard[i][2] == 3)
+			{
+				//System.out.println("vertical win for: 1");
+				return 1;
+			}
+			if (tempBoard[i][0] + tempBoard[i][1] + tempBoard[i][2] == -3)
+			{
+				//System.out.println("vertical win for: -1");
+				return -1;
+			}
+		}
+		// horizontal win conditions
+		for (int i = 0; i < 3; i++)
+		{
+			if (tempBoard[0][i] + tempBoard[1][i] + tempBoard[2][i] == 3)
+			{
+				//System.out.println("horizontal win for: 1");
+				return 1;
+			}
+			if (tempBoard[0][i] + tempBoard[1][i] + tempBoard[2][i] == -3)
+			{
+				//System.out.println("horizontal win for: -1");
+				return -1;
+			}
+		}
+		// diagonal win conditions
+		if ((tempBoard[0][0] + tempBoard[1][1] + tempBoard[2][2] == 3)
+			|| (tempBoard[2][0] + tempBoard[1][1] + tempBoard[0][2] == 3))
+		{
+			//System.out.println("diagonal win for: 1");
+			return 1;
+		}
+		if ((tempBoard[0][0] + tempBoard[1][1] + tempBoard[2][2] == -3)
+				|| (tempBoard[2][0] + tempBoard[1][1] + tempBoard[0][2] == -3))
+		{
+				//System.out.println("diagonal win for: -1");
+				return -1;
+		}
+		
+		// no win condition found
+		return 0;
+	}
+	
+	public boolean gameOver()
+	{
+		return this.gameOver;
+	}
+	
+	private void checkValidBoard(int[][] tempBoard)
+	{
+		if (tempBoard.length != 3)
+		{
+			new Exception("Invalid board width.");
+			System.exit(-1);
+		}
+		if (tempBoard[0].length != 3 ||
+				tempBoard[1].length != 3 ||
+				tempBoard[2].length != 3)
+		{
+			new Exception("Invalid board height.");
+			System.exit(-1);
+		}
+	}
+	
+	public List<Position> getValidMoves(List<Position> origBoard, int turn)
+	{
+		ArrayList<Position> validMoves = new ArrayList<Position>();
+		
+		for(int xCell = 0; xCell < boardWidth; xCell++)
+		{
+			for (int yCell = 0; yCell < boardHeight; yCell++)
+			{
+				if(origBoard.get((xCell*boardHeight+yCell)).getPiece().getOwner() == 0)
+				{
+					validMoves.add(new Position(xCell,yCell,new GamePiece(true, turn, null)));
+				}
+			}
+		}
+		
+		return validMoves;
+	}
+	
+	public List<Position> simulateMove(List<Position> origBoard, Position move)
+	{
+		if (isWinningBoard(origBoard) != 0)
+		{
+//			System.out.println("Game already won by: " + isWinningBoard(origBoard));
+			return null;
+		}
+		int xCell = move.getX();
+		int yCell = move.getY();
+		int turn = move.getPiece().getOwner();
+		//List<Position> newBoard = new ArrayList<Position>(origBoard);
+		List<Position> newBoard = copyBoard(origBoard);
+		if (origBoard.get((xCell*boardHeight)+yCell).getPiece().getOwner() == 0)
+		{
+			newBoard.get((xCell*boardHeight)+yCell).getPiece().setOwner(turn);
+		}
+		
+		return newBoard;
+	}
+	
+	public void printBoardText(List<Position> board)
+	{
+		int i = 0;
+		for (int y = 0; y <= boardHeight - 1; y++)
+		{
+			System.out.print("| ");
+			for (int x = 0; x < boardWidth; x++)
+			{
+				GamePiece p = board.get(x*boardHeight + y).getPiece();
+				if (p.getCard() != null)
+				{
+					if (p.isFlipped())
+						System.out.print(p.getCard().toString() + " | ");
+					else
+						System.out.print("**** | ");
+				}
+				else
+					System.out.print("     | ");
+				i++;
+			}
+			System.out.println();
+		}
+	}
+	
+	public void printDeck(List<Card> deck)
+	{
+		System.out.println(" ===== BEGIN DECK ======");
+		for (Card c : deck)
+		{
+			System.out.println(c.toString());
+		}
+		System.out.println(" ===== END DECK ======");
+	}
+	
+	public List<Position> copyBoard(List<Position> origBoard)
+	{
+		ArrayList<Position> newBoard = new ArrayList<Position>();
+		
+		for (Position origP : origBoard)
+		{
+			newBoard.add(new Position(origP.getX(), origP.getY(), new GamePiece(origP.getPiece().isFlipped(), origP.getPiece().getOwner(), origP.getPiece().getCard())));
+		}
+		
+		return newBoard;
+	}
+}

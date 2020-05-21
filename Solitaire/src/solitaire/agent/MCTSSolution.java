@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 import solitaire.game.Game;
+import solitaire.game.Move;
 import solitaire.game.Position;
 
 public class MCTSSolution extends Agent {
@@ -15,7 +16,7 @@ public class MCTSSolution extends Agent {
 	Random rand = new Random();
 
 	@Override
-	public Position getMove(Game game, long timeLimit) 
+	public Move getMove(Game game, long timeLimit) 
 	{
 		// initialize class variables and create root node (passed in game state)
 		this.game = game;
@@ -133,7 +134,7 @@ public class MCTSSolution extends Agent {
 		// copy board so we don't mess any future nodes up
 		List<Position> rolloutBoard = game.copyBoard(leaf.boardState);
 		// get possible next moves
-		List<Position> validMoves = game.getValidMoves(rolloutBoard, turn);
+		List<Move> validMoves = game.getValidMoves(rolloutBoard, turn);
 		
 		// continue getting the next board until we reach a terminal state
 		while (game.isWinningBoard(rolloutBoard) == 0 && !validMoves.isEmpty())
@@ -175,9 +176,9 @@ public class MCTSSolution extends Agent {
 	
 	private void addChildren(Node node)
 	{
-		List<Position> validMoves = game.getValidMoves(node.boardState, node.turn);
+		List<Move> validMoves = game.getValidMoves(node.boardState, node.turn);
 		// create children for each valid move
-		for (Position p : validMoves)
+		for (Move p : validMoves)
 		{
 			Node newChild = new Node();
 			newChild.moveToGetHere = p;
@@ -200,7 +201,7 @@ public class MCTSSolution extends Agent {
 		}
 	}
 	
-	private Position bestChildWinPct(Node parent)
+	private Move bestChildWinPct(Node parent)
 	{
 		// go through all children and print win percentages, return the one with the highest
 		// draws == .5 wins lets us choose drawing moves more than losing moves we can't win
@@ -260,7 +261,7 @@ public class MCTSSolution extends Agent {
 		public int turn;
 		public boolean isTerminal;
 		public int winner;
-		public Position moveToGetHere;
+		public Move moveToGetHere;
 		
 		Node()
 		{
@@ -320,7 +321,7 @@ public class MCTSSolution extends Agent {
 			game.printBoardText(this.boardState);
 			System.out.println("wins: " + this.wins + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", turn: " + this.turn + 
 					", isTerminal: " + this.isTerminal + ", winner: " + this.winner + 
-					", moveToGetHere: " + ((this.moveToGetHere != null) ? this.moveToGetHere.getPiece().getOwner() + "@" + this.moveToGetHere.getX() + "," + this.moveToGetHere.getY() 
+					", moveToGetHere: " + ((this.moveToGetHere != null) ? this.moveToGetHere.getToPosition().getPiece().getOwner() + "@" + this.moveToGetHere.getToPosition().getX() + "," + this.moveToGetHere.getToPosition().getY() 
 					: "null"));
 			System.out.println("===== Node End =====");
 		}

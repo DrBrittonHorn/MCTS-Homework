@@ -2,22 +2,32 @@ package solitaire.agent;
 
 import solitaire.game.Game;
 import solitaire.game.GamePiece;
+import solitaire.game.Move;
 import solitaire.game.Position;
 
 public class Human extends Agent{
-	public int xClick,yClick;
+	private Move moveToMake;
 	public Human()
 	{
 		responded = false;
 	}
 
 	@Override
-	public Position getMove(Game game, long timeDue) {
-		Position p = new Position(xClick,yClick,new GamePiece(false,game.getTurn(),null));
-		xClick = -1;
-		yClick = -1;
+	public Move getMove(Game game, long timeDue) {
 		responded = false;
-		return p;
+		if (moveToMake == null)
+			return null;
+		Move returnMove = moveToMake.shallowCopy();
+		moveToMake = null;
+		return returnMove;
+	}
+	
+	public boolean setMove(Game game, Move move)
+	{
+		System.out.println("Setting move");
+		moveToMake = move;
+		responded = true;
+		return game.isValidMove(move);
 	}
 
 }

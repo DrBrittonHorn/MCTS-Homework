@@ -39,14 +39,19 @@ public final class GameView extends JComponent
 	private int tabularStartY = 200, tabularBuffer = foundationBuffer, cardStackOffset = 20;
 	private int chosenCardBack = 5;
 	private static final String imageLoc = "res/";
+	// club = f0, diamond = f1, spade = f2, heart = f3
 	private List<Image> clubs = new ArrayList<>(), spades = new ArrayList<>(), hearts = new ArrayList<>(),
 			diamonds = new ArrayList<>(), cardBacks = new ArrayList<>();
 	private int highlightX = -1, highlightY = -1;
-	private boolean isActiveSelection, isWasteSelected, isF0Selected, isF1Selected, isF2Selected, isF3Selected;
+	private boolean isActiveSelection, isWasteSelected, isFoundationSelected, isPositionSelected;
+	private int selectedFoundation = -1, selectedPosition = -1;
 	
 	// bounding boxes for clicks
 	private int deckX, deckY, wasteX, wasteY, f0X, f0Y, f1X, f1Y, f2X, f2Y, f3X, f3Y,
 			t0X, t0Y, t1X, t1Y, t2X, t2Y, t3X, t3Y, t4X, t4Y, t5X, t5Y, t6X, t6Y;
+	
+	// keep track of what the player clicked on first
+	private Position moveStart;
 
 	public GameView(Game game)
 	{
@@ -158,12 +163,14 @@ public final class GameView extends JComponent
 
 	public void paintComponent(Graphics g)
 	{
+		//System.out.println("painting...");
 		bufferGraphics = g;
 		Graphics2D g2d = (Graphics2D) g;
 		drawBoard(g2d);
 		drawPieces(g2d);
 		drawDeck(g2d);
 		drawWaste(g2d);
+		drawSelectedTab(g2d);
 	}
 
 	private void drawBoard(Graphics2D g2d)
@@ -177,17 +184,9 @@ public final class GameView extends JComponent
 		deckX = bufferW;
 		deckY = bufferH;
 		bufferGraphics.drawRect(deckX, deckY, pieceWidth, pieceHeight);
-		if (isWasteSelected)
-		{
-			bufferGraphics.setColor(Color.RED);
-		}
 		wasteX = bufferW+pieceWidth+foundationBuffer;
 		wasteY = bufferH;
 		bufferGraphics.drawRect(wasteX, wasteY, pieceWidth, pieceHeight);
-		if (isWasteSelected)
-		{
-			bufferGraphics.setColor(Color.WHITE);
-		}
 		// outline foundations
 		IntStream.iterate(0, i -> i + 1).limit(4).forEach(i -> drawFoundation(i, g2d));
 		// outline tabulars
@@ -218,8 +217,16 @@ public final class GameView extends JComponent
 				System.out.println("Incorrect foundation number");
 				break;
 		}
+		if (isFoundationSelected && selectedFoundation == i)
+		{
+			bufferGraphics.setColor(Color.RED);
+		}
 		bufferGraphics.drawRect(foundationStart + ((pieceWidth + foundationBuffer) * i), bufferH, pieceWidth,
 				pieceHeight);
+		if (isFoundationSelected && selectedFoundation == i)
+		{
+			bufferGraphics.setColor(Color.WHITE);
+		}
 		drawFoundationPieces(i, g2d);
 	}
 
@@ -276,10 +283,60 @@ public final class GameView extends JComponent
 	{
 		if (game.waste.size() > 0)
 		{
-			Card c = game.deck.get(0);
-			g2d.drawImage(getCardImage(c), bufferW + pieceWidth + foundationBuffer, bufferH,
-					bufferW + (2 * pieceWidth) + foundationBuffer, pieceHeight + bufferH, 0, 0,
-					getCardImage(c).getWidth(null), getCardImage(c).getHeight(null), this);
+			int highlightX;
+			if (game.isSingleFlip)
+			{
+				Card c = game.waste.get(game.waste.size()-1);
+				g2d.drawImage(getCardImage(c), wasteX, wasteY,
+						wasteX + pieceWidth, pieceHeight + wasteY, 0, 0,
+						getCardImage(c).getWidth(null), getCardImage(c).getHeight(null), this);
+				highlightX = wasteX;
+			}
+			else
+			{
+				if (game.getLastFlipCount() > 2)
+				{
+					Card c2 = game.waste.get(game.waste.size()-3);
+					g2d.drawImage(getCardImage(c2), wasteX, wasteY,
+							wasteX + pieceWidth, pieceHeight + wasteY, 0, 0,
+							getCardImage(c2).getWidth(null), getCardImage(c2).getHeight(null), this);
+					Card c1 = game.waste.get(game.waste.size()-2);
+					g2d.drawImage(getCardImage(c1), wasteX + cardStackOffset, wasteY,
+							wasteX + pieceWidth + cardStackOffset, pieceHeight + wasteY, 0, 0,
+							getCardImage(c1).getWidth(null), getCardImage(c1).getHeight(null), this);
+					Card c0 = game.waste.get(game.waste.size()-1);
+					g2d.drawImage(getCardImage(c0), wasteX + (cardStackOffset*2), wasteY,
+							wasteX + pieceWidth + (cardStackOffset*2), pieceHeight + wasteY, 0, 0,
+							getCardImage(c0).getWidth(null), getCardImage(c0).getHeight(null), this);
+					highlightX = wasteX + (cardStackOffset*2);
+				}
+				else if (game.getLastFlipCount() > 1)
+				{
+					Card c1 = game.waste.get(game.waste.size()-3);
+					g2d.drawImage(getCardImage(c1), wasteX, wasteY,
+							wasteX + pieceWidth, pieceHeight + wasteY, 0, 0,
+							getCardImage(c1).getWidth(null), getCardImage(c1).getHeight(null), this);
+					Card c0 = game.waste.get(game.waste.size()-2);
+					g2d.drawImage(getCardImage(c0), wasteX + cardStackOffset, wasteY,
+							wasteX + pieceWidth + cardStackOffset, pieceHeight + wasteY, 0, 0,
+							getCardImage(c0).getWidth(null), getCardImage(c0).getHeight(null), this);
+					highlightX = wasteX + cardStackOffset;
+				}
+				else
+				{
+					Card c = game.waste.get(game.waste.size()-1);
+					g2d.drawImage(getCardImage(c), wasteX, wasteY,
+							wasteX + pieceWidth, pieceHeight + wasteY, 0, 0,
+							getCardImage(c).getWidth(null), getCardImage(c).getHeight(null), this);
+					highlightX = wasteX;
+				}
+			}
+			if (isWasteSelected)
+			{
+				bufferGraphics.setColor(Color.RED);
+				bufferGraphics.drawRect(highlightX, wasteY, pieceWidth, pieceHeight);
+				bufferGraphics.setColor(Color.WHITE);
+			}
 		}
 	}
 
@@ -296,18 +353,18 @@ public final class GameView extends JComponent
 		}
 		if (i == 2)
 		{
-			foundationCards = game.foundationHeart;
+			foundationCards = game.foundationSpade;
 		}
 		if (i == 3)
 		{
-			foundationCards = game.foundationSpade;
+			foundationCards = game.foundationHeart;
 		}
 		
-		if (game.foundationClub.size() > 0)
+		if (foundationCards.size() > 0)
 		{
-			g2d.drawImage(getCardImage(foundationCards.get(0)), foundationOffset + ((pieceWidth + foundationBuffer) * i), bufferH,
+			g2d.drawImage(getCardImage(foundationCards.get(foundationCards.size()-1)), foundationOffset + ((pieceWidth + foundationBuffer) * i), bufferH,
 					foundationOffset + ((pieceWidth + foundationBuffer) * i) + pieceWidth, pieceHeight + bufferH, 0, 0,
-					getCardImage(foundationCards.get(0)).getWidth(null), getCardImage(foundationCards.get(0)).getHeight(null), this);
+					getCardImage(foundationCards.get(foundationCards.size()-1)).getWidth(null), getCardImage(foundationCards.get(foundationCards.size()-1)).getHeight(null), this);
 		}
 	}
 
@@ -332,8 +389,24 @@ public final class GameView extends JComponent
 								bufferW + ((pieceWidth + tabularBuffer) * x) + pieceWidth, pieceHeight + tabularStartY + (y*cardStackOffset), 0, 0,
 								cardBacks.get(chosenCardBack).getWidth(null), cardBacks.get(chosenCardBack).getHeight(null), this);
 					}
+					
 				}
 			}
+		}
+	}
+	
+	private void drawSelectedTab(Graphics2D g2d)
+	{
+		//System.out.println(isActiveSelection + " " + isPositionSelected);
+		if (isActiveSelection && isPositionSelected)
+		{
+			//System.out.println("Drawing selected tab");
+			// board.get((x * game.getBoardHeight()) + y)
+			int x = selectedPosition / game.getBoardHeight();
+			int y = selectedPosition % game.getBoardHeight();
+			bufferGraphics.setColor(Color.RED);
+			bufferGraphics.drawRect(bufferW + ((pieceWidth + tabularBuffer) * x), tabularStartY + (y*cardStackOffset), pieceWidth, pieceHeight);
+			bufferGraphics.setColor(Color.WHITE);
 		}
 	}
 	
@@ -353,19 +426,26 @@ public final class GameView extends JComponent
 		if (y >= deckY && y <= deckY + pieceHeight
 				&& x >= deckX && x <= deckX + pieceWidth)
 		{
-			System.out.println("Clicked on deck");
-			posClick = game.getBoard().get(game.deckPos);
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on deck");
+				posClick = game.getBoard().get(game.deckPos);
+				h.setMove(game, new Move(null, posClick));
+				moveStart = null;
+				return;
+			}
 		}
 		
 		// check click on waste
 		if (y >= wasteY && y <= wasteY + pieceHeight
-				&& x >= wasteX && x <= wasteX + pieceWidth)
+				&& x >= wasteX && x <= wasteX + pieceWidth + (game.getLastFlipCount() * cardStackOffset))
 		{
-			if (!isActiveSelection)
+			if (!isActiveSelection && game.waste.size() > 0)
 			{
 				System.out.println("Clicked on waste w/o active selection");
 				isActiveSelection = true;
 				isWasteSelected = true;
+				moveStart = game.getBoard().get(game.wastePos);
 			}
 			else if (isWasteSelected)
 			{
@@ -373,77 +453,153 @@ public final class GameView extends JComponent
 				isActiveSelection = false;
 				isWasteSelected = false;
 			}
-			posClick = game.getBoard().get(game.wastePos);
+			else
+				System.out.println("Not clickable right now.");
+			//posClick = game.getBoard().get(game.wastePos);
 		}
 		
 		// check click on foundations
 		if (y >= f0Y && y <= f0Y + pieceHeight
 				&& x >= f0X && x <= f0X + pieceWidth)
 		{
-			if (!isActiveSelection)
+			System.out.println(isActiveSelection);
+			if (!isActiveSelection && game.foundationClub.size() > 0)
 			{
 				System.out.println("Clicked on F0 w/o active selection");
 				isActiveSelection = true;
-				isF0Selected = true;
+				isFoundationSelected = true;
+				selectedFoundation = 0;
+				moveStart = game.getBoard().get(game.f0Pos);
 			}
-			else if (isF0Selected)
+			else if (isFoundationSelected && selectedFoundation == 0)
 			{
 				System.out.println("Clicked on F0 w/ existing selection");
 				isActiveSelection = false;
-				isF0Selected = false;
+				isFoundationSelected = false;
+				selectedFoundation = -1;
 			}
-			posClick = game.getBoard().get(game.f0Pos);
+			else if (isActiveSelection)
+			{
+				// clicked on foundation second, attempting to move card to foundation
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, game.getBoard().get(game.f0Pos)));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
+			}
+			//posClick = game.getBoard().get(game.f0Pos);
 		}
 		else if (y >= f1Y && y <= f1Y + pieceHeight
 				&& x >= f1X && x <= f1X + pieceWidth)
 		{
-			if (!isActiveSelection)
+			if (!isActiveSelection && game.foundationDiamond.size() > 0)
 			{
 				System.out.println("Clicked on F1 w/o active selection");
 				isActiveSelection = true;
-				isF1Selected = true;
+				isFoundationSelected = true;
+				selectedFoundation = 1;
+				moveStart = game.getBoard().get(game.f1Pos);
 			}
-			else if (isF1Selected)
+			else if (isFoundationSelected && selectedFoundation == 1)
 			{
 				System.out.println("Clicked on F1 w/ existing selection");
 				isActiveSelection = false;
-				isF1Selected = false;
+				isFoundationSelected = false;
+				selectedFoundation = -1;
 			}
-			posClick = game.getBoard().get(game.f1Pos);
+			else if (isActiveSelection)
+			{
+				// clicked on foundation second, attempting to move card to foundation
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, game.getBoard().get(game.f1Pos)));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
+			}
 		}
 		else if (y >= f2Y && y <= f2Y + pieceHeight
 				&& x >= f2X && x <= f2X + pieceWidth)
 		{
-			if (!isActiveSelection)
+			if (!isActiveSelection && game.foundationSpade.size() > 0)
 			{
 				System.out.println("Clicked on F2 w/o active selection");
 				isActiveSelection = true;
-				isF2Selected = true;
+				isFoundationSelected = true;
+				selectedFoundation = 2;
+				moveStart = game.getBoard().get(game.f2Pos);
 			}
-			else if (isF2Selected)
+			else if (isFoundationSelected && selectedFoundation == 2)
 			{
 				System.out.println("Clicked on F2 w/ existing selection");
 				isActiveSelection = false;
-				isF2Selected = false;
+				isFoundationSelected = false;
+				selectedFoundation = -1;
 			}
-			posClick = game.getBoard().get(game.f2Pos);
+			else if (isActiveSelection)
+			{
+				// clicked on foundation second, attempting to move card to foundation
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, game.getBoard().get(game.f2Pos)));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
+			}
 		}
 		else if (y >= f3Y && y <= f3Y + pieceHeight
 				&& x >= f3X && x <= f3X + pieceWidth)
 		{
-			if (!isActiveSelection)
+			if (!isActiveSelection && game.foundationHeart.size() > 0)
 			{
 				System.out.println("Clicked on F3 w/o active selection");
 				isActiveSelection = true;
-				isF3Selected = true;
+				isFoundationSelected = true;
+				selectedFoundation = 3;
+				moveStart = game.getBoard().get(game.f3Pos);
 			}
-			else if (isF3Selected)
+			else if (isFoundationSelected && selectedFoundation == 3)
 			{
 				System.out.println("Clicked on F3 w/ existing selection");
 				isActiveSelection = false;
-				isF3Selected = false;
+				isFoundationSelected = false;
+				selectedFoundation = -1;
 			}
-			posClick = game.getBoard().get(game.f3Pos);
+			else if (isActiveSelection)
+			{
+				// clicked on foundation second, attempting to move card to foundation
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, game.getBoard().get(game.f3Pos)));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
+			}
 		}
 		
 		// check click on tabular (later check for individual card)
@@ -452,14 +608,50 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(0,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 0");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 0, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(0);
+				posClick = game.getLastFlippedCardInTab(0);
 				System.out.println("Augmented. Clicked on tabular 0, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 0 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				System.out.println("Deactivating");
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		else if (y >= t1Y
@@ -467,14 +659,49 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(1,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 1");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 1, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(1);
+				posClick = game.getLastFlippedCardInTab(1);
 				System.out.println("Augmented. Clicked on tabular 1, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 1 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		else if (y >= t2Y
@@ -482,14 +709,49 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(2,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 2");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 2, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(2);
+				posClick = game.getLastFlippedCardInTab(2);
 				System.out.println("Augmented. Clicked on tabular 2, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 2 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		else if (y >= t3Y
@@ -497,14 +759,49 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(3,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 3");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 3, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(3);
+				posClick = game.getLastFlippedCardInTab(3);
 				System.out.println("Augmented. Clicked on tabular 3, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 3 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		else if (y >= t4Y
@@ -512,14 +809,49 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(4,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 4");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 4, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(4);
+				posClick = game.getLastFlippedCardInTab(4);
 				System.out.println("Augmented. Clicked on tabular 4, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 4 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		if (y >= t5Y
@@ -527,14 +859,49 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(5,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 5");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 5, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(5);
+				posClick = game.getLastFlippedCardInTab(5);
 				System.out.println("Augmented. Clicked on tabular 5, card " + posClick.getY());
+			}
+			if (!isActiveSelection)
+			{
+				System.out.println("Clicked on tab 5 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
 		else if (y >= t6Y
@@ -542,33 +909,52 @@ public final class GameView extends JComponent
 		{
 			
 			posClick = getPositionFromClick(6,y);
+			if (posClick == null)
+			{
+				System.out.println("Attempted to click on empty tab 6");
+				return;
+			}
 			if (posClick.getPiece().isFlipped())
 			{
 				System.out.println("Clicked on tabular 6, card " + posClick.getY());
 			}
 			else
 			{
-				posClick = getLastFlippedCardInTab(6);
+				posClick = game.getLastFlippedCardInTab(6);
 				System.out.println("Augmented. Clicked on tabular 6, card " + posClick.getY());
 			}
-		}
-	}
-	
-	private Position getLastFlippedCardInTab(int tab)
-	{
-		for (int y = game.getBoardHeight() - 1; y>= 0; y--)
-		{
-			Position tmpPos = game.getBoard().get((tab*game.getBoardHeight()) + y);
-			GamePiece piece = tmpPos.getPiece();
-			if (piece.getCard() != null)
+			if (!isActiveSelection)
 			{
-				if (piece.isFlipped())
-					return tmpPos;
-				else
-					return null;
+				System.out.println("Clicked on tab 6 " + posClick.getY() +  "w/o active selection");
+				isActiveSelection = true;
+				isPositionSelected = true;
+				selectedPosition = (posClick.getX() * game.getBoardHeight()) + posClick.getY();
+				moveStart = posClick;
+			}
+			else if (isPositionSelected && selectedPosition == (posClick.getX() * game.getBoardHeight()) + posClick.getY())
+			{
+				isActiveSelection = false;
+				isPositionSelected = false;
+				selectedPosition = -1;
+			}
+			else
+			{
+				// clicked on tab second, attempting to move card here
+				if (moveStart == null)
+					System.out.println("move start is null!");
+				boolean valid = h.setMove(game, new Move(moveStart, posClick));
+				if (valid)
+				{
+					isActiveSelection = false;
+					isFoundationSelected = false;
+					isPositionSelected = false;
+					selectedFoundation = -1;
+					selectedPosition = -1;
+				}
+				return;
 			}
 		}
-		return null;
+		human.responded = true;
 	}
 	
 	private Position getPositionFromClick(int tab, int yVal)
@@ -584,6 +970,11 @@ public final class GameView extends JComponent
 			}
 			else
 				break;
+		}
+		if (numCards == 0)
+		{
+			// empty tab
+			return null;
 		}
 		int chosenCard = -1;
 		if (yVal >= tabularStartY + ((numCards-1)*cardStackOffset)

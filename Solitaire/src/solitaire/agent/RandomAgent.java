@@ -4,16 +4,17 @@ import java.util.List;
 import java.util.Random;
 
 import solitaire.game.Game;
+import solitaire.game.Move;
 import solitaire.game.Position;
 
 public class RandomAgent extends Agent {
 
 
 	@Override
-	public Position getMove(Game game, long timeDue) {
-		List<Position> validMoves = game.getValidMoves(game.getBoard(), game.getTurn());
+	public Move getMove(Game game, long timeDue) {
+		List<Move> validMoves = game.getValidMoves(game.getBoard(), game.getTurn());
 		
-		for (Position move : validMoves)
+		for (Move move : validMoves)
 		{
 			List<Position> newBoard = game.simulateMove(game.getBoard(), move);
 			if (game.isWinningBoard(newBoard) == game.getTurn())

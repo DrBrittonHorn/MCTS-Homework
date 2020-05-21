@@ -31,6 +31,9 @@ public final class Game {
 	public List<Card> tab5 = new ArrayList<Card>();
 	public List<Card> tab6 = new ArrayList<Card>();
 	private boolean gameOver;
+	public boolean isSingleFlip = false;
+	private int lastFlipCount;
+	private GamePiece nullPiece = new GamePiece(false,0, null);
 	
 	public Game() {
 		// Initialize all positions to be blank
@@ -39,7 +42,7 @@ public final class Game {
 		{
 			for (int y = 0; y < boardHeight; y++)
 			{
-				board.add(new Position(x, y, new GamePiece(false,0, null)));
+				board.add(new Position(x, y, nullPiece));
 			}
 		}
 		// add deck position
@@ -101,25 +104,145 @@ public final class Game {
 		return this.turn;
 	}
 	
-	protected void advanceGame(Position move)
+	protected void advanceGame(Move move)
 	{
-		/*if (gameOver)
+		if (move == null)
 			return;
-		if (board.get((move.getX() * boardHeight) + move.getY()).getPiece().getOwner() != 0)
+		if (gameOver)
+			return;
+		// single click moves are always in toPosition
+		if (move.getToPosition().isDeck())
 		{
-			System.out.println("Piece exists. Ignoring.");
+			if (deck.size() > 0)
+				flipDeck();
+			else
+				resetDeck();
 			return;
 		}
-		board.get((move.getX() * boardHeight) + move.getY()).getPiece().setOwner(turn);
-		
-		if (isWinningBoard(this.board) != 0 || getValidMoves(this.board, turn).isEmpty())
+		if (move.getFromPosition().isFoundation())
 		{
-			gameOver = true;
-			return;
+			if (move.getToPosition().isFoundation()) return;
+			Card oldCard;
+			int foundationNum = move.getFromPosition().getFoundationNum();
+			switch (foundationNum) {
+				case 0:
+					if (foundationClub.size() <= 0) return;
+					oldCard = foundationClub.get(foundationClub.size()-1);
+					foundationClub.remove(foundationClub.size()-1);
+					break;
+				case 1:
+					if (foundationDiamond.size() <= 0) return;
+					oldCard = foundationDiamond.get(foundationDiamond.size()-1);
+					foundationDiamond.remove(foundationDiamond.size()-1);
+					break;
+				case 2:
+					if (foundationSpade.size() <= 0) return;
+					oldCard = foundationSpade.get(foundationSpade.size()-1);
+					foundationSpade.remove(foundationSpade.size()-1);
+					break;
+				case 3:
+					if (foundationHeart.size() <= 0) return;
+					oldCard = foundationHeart.get(foundationHeart.size()-1);
+					foundationHeart.remove(foundationHeart.size()-1);
+					break;
+				default:
+					System.out.println("Bad foundation number!");
+					return;
+			}
+			if (move.getToPosition().getX() >= 0)
+			{
+				// move to tab
+				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
+				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+			}
 		}
-
-		turn *= -1;*/
+		else if (move.getFromPosition().isWaste())
+		{
+			
+		}
+		else
+		{
+			// must be a move from one of the tabular positions
+			Position fromPosition = move.getFromPosition();
+			if (!fromPosition.getPiece().isFlipped())
+			{
+				System.out.println("Attempted to move a face down card");
+				return;
+			}
+			GamePiece oldPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).getPiece();
+			board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(nullPiece);
+			// move to foundation
+			if (move.getToPosition().isFoundation())
+			{
+				int foundationNum = move.getToPosition().getFoundationNum();
+				switch (foundationNum) {
+					case 0:
+						foundationClub.add(oldPiece.getCard());
+						break;
+					case 1:
+						foundationDiamond.add(oldPiece.getCard());
+						break;
+					case 2:
+						foundationSpade.add(oldPiece.getCard());
+						break;
+					case 3:
+						foundationHeart.add(oldPiece.getCard());
+						break;
+					default:
+						System.out.println("Bad foundation number!");
+						return;
+				}
+			}
+			else if (move.getToPosition().getX() >= 0)
+			{
+				// move to another tab
+				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
+				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldPiece.getCard()));
+			}
+		}
 		return;
+	}
+	
+	private void resetDeck()
+	{
+		System.out.println("resetting deck.");
+		for (Card wasteCard : waste)
+		{
+			deck.add(0,wasteCard);
+		}
+		waste = new ArrayList<Card>();
+		lastFlipCount = 0;
+	}
+	
+	private void flipDeck()
+	{
+		int flipCount = 0;
+		int iterations = (isSingleFlip) ? 1 : 3;
+		for (int i = 0; i < iterations; i++)
+		{
+			if (deck.size() <= 0) break;
+			flipCount++;
+			Card deckTop = deck.remove(deck.size()-1);
+			waste.add(deckTop);
+		}
+		lastFlipCount = flipCount;
+	}
+	
+	public Position getLastFlippedCardInTab(int tab)
+	{
+		for (int y = getBoardHeight() - 1; y>= 0; y--)
+		{
+			Position tmpPos = getBoard().get((tab*getBoardHeight()) + y);
+			GamePiece piece = tmpPos.getPiece();
+			if (piece.getCard() != null)
+			{
+				if (piece.isFlipped())
+					return tmpPos;
+				else
+					return null;
+			}
+		}
+		return null;
 	}
 	
 	public int isWinningBoard(List<Position> origBoard)
@@ -200,40 +323,27 @@ public final class Game {
 		}
 	}
 	
-	public List<Position> getValidMoves(List<Position> origBoard, int turn)
+	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
-		ArrayList<Position> validMoves = new ArrayList<Position>();
-		
-		for(int xCell = 0; xCell < boardWidth; xCell++)
-		{
-			for (int yCell = 0; yCell < boardHeight; yCell++)
-			{
-				if(origBoard.get((xCell*boardHeight+yCell)).getPiece().getOwner() == 0)
-				{
-					validMoves.add(new Position(xCell,yCell,new GamePiece(true, turn, null)));
-				}
-			}
-		}
+		ArrayList<Move> validMoves = new ArrayList<Move>();
 		
 		return validMoves;
 	}
 	
-	public List<Position> simulateMove(List<Position> origBoard, Position move)
+	public boolean isValidMove(Move move)
+	{
+		return true;
+	}
+	
+	public List<Position> simulateMove(List<Position> origBoard, Move move)
 	{
 		if (isWinningBoard(origBoard) != 0)
 		{
 //			System.out.println("Game already won by: " + isWinningBoard(origBoard));
 			return null;
 		}
-		int xCell = move.getX();
-		int yCell = move.getY();
-		int turn = move.getPiece().getOwner();
 		//List<Position> newBoard = new ArrayList<Position>(origBoard);
 		List<Position> newBoard = copyBoard(origBoard);
-		if (origBoard.get((xCell*boardHeight)+yCell).getPiece().getOwner() == 0)
-		{
-			newBoard.get((xCell*boardHeight)+yCell).getPiece().setOwner(turn);
-		}
 		
 		return newBoard;
 	}
@@ -282,5 +392,10 @@ public final class Game {
 		}
 		
 		return newBoard;
+	}
+
+	public int getLastFlipCount()
+	{
+		return lastFlipCount;
 	}
 }

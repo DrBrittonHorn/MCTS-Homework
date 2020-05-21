@@ -92,5 +92,11 @@ public class Position {
 	{
 		this.deck = deck;
 	}
+	
+	public Position copy()
+	{
+		Position copy = new Position(this.x, this.y, this.p, this.deck, this.waste, this.foundation, this.foundationNum);
+		return copy;
+	}
 }
 

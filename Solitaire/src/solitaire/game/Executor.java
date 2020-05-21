@@ -84,19 +84,23 @@ public class Executor {
 		
 		while (!game.gameOver())
 		{
-			game.advanceGame(agent1.getMove(game, runTime));
-			if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
+			if (agent1.responded)
 			{
-				System.out.println("Agent 1 took too long to respond");
-			}
-			start = System.currentTimeMillis();
-			
-			gv.repaint();
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				//System.out.println("Human responded");
+				game.advanceGame(agent1.getMove(game, runTime));
+				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
+				{
+					System.out.println("Agent 1 took too long to respond");
+				}
+				start = System.currentTimeMillis();
+				
+				gv.repaint();
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		}
 		try {

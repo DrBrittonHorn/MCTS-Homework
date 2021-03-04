@@ -106,12 +106,42 @@ public final class Game {
 		return this.turn;
 	}
 	
+	public int getBoardIndex(Position p)
+	{
+		if (p.isDeck())
+			return deckPos;
+		if (p.isFoundation())
+		{
+			switch (p.getFoundationNum())
+			{
+				case 0:
+					return f0Pos;
+				case 1:
+					return f1Pos;
+				case 2:
+					return f2Pos;
+				case 3:
+					return f3Pos;
+				default:
+					return -1;
+			}
+		}
+		if (p.isWaste())
+			return wastePos;
+		return (p.getX() * boardHeight) + p.getY();
+	}
+	
 	protected void advanceGame(Move move)
 	{
 		if (move == null)
 			return;
 		if (gameOver)
 			return;
+		if (!isValidMove(move))
+		{
+			System.out.println("Invalid move attempted: " + move.toString());
+			return;
+		}
 		// single click moves are always in toPosition
 		if (move.getFromPosition() == null)
 		{
@@ -208,7 +238,10 @@ public final class Game {
 			else
 			{
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
-				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				if (lastCard != null)
+					board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				else // empty tab
+					board.get((move.getToPosition().getX() * boardHeight)).setPiece(new GamePiece(true, 1, oldCard));
 				waste.remove(waste.size()-1);
 				lastFlipCount--;
 				return;
@@ -437,6 +470,30 @@ public final class Game {
 	
 	public boolean isValidMove(Move move)
 	{
+		Position from = move.getFromPosition();
+		Card fromCard = null;
+		if (from != null && from.getPiece() != null)
+		{
+			if (from.isWaste())
+			{
+				System.out.println(waste.get(waste.size()-1));
+				fromCard = waste.get(waste.size()-1);
+			}
+			else
+			{	
+				System.out.println(from.getPiece().getCard().toString());
+				fromCard = from.getPiece().getCard();
+			}
+		}
+		Position to = move.getToPosition();
+		// check from card is a K and to is empty tab
+		if (from != null && from.getPiece() != null
+				&& fromCard.rank != 13
+				&& to != null && to.getX() >= 0 
+				&& board.get(to.getX() * boardHeight).getPiece().getCard() == null)
+		{
+			return false;
+		}
 		return true;
 	}
 	

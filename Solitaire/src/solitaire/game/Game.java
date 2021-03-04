@@ -76,12 +76,14 @@ public final class Game {
 			}
 		}
 		
+		/*
 		// for testing purposes only
 		for (int addCard = 7; addCard < 11; addCard++)
 		{
 			board.get((6 * boardHeight) + addCard).setPiece(new GamePiece(true,1,deck.get(0)));
 			deck.remove(0);
 		}
+		*/
 	}
 	
 	public List<Position> getBoard()
@@ -111,13 +113,22 @@ public final class Game {
 		if (gameOver)
 			return;
 		// single click moves are always in toPosition
-		if (move.getToPosition().isDeck())
+		if (move.getFromPosition() == null)
 		{
-			if (deck.size() > 0)
-				flipDeck();
-			else
-				resetDeck();
-			return;
+			if (move.getToPosition().isDeck())
+			{
+				if (deck.size() > 0)
+					flipDeck();
+				else
+					resetDeck();
+				return;
+			}
+			else // clicked on unflipped tab
+			{
+				GamePiece oldpiece = board.get((move.getToPosition().getX() * boardHeight)+move.getToPosition().getY()).getPiece();
+				oldpiece.setFlipped(true);
+				return;
+			}
 		}
 		if (move.getFromPosition().isFoundation())
 		{
@@ -158,7 +169,50 @@ public final class Game {
 		}
 		else if (move.getFromPosition().isWaste())
 		{
-			
+			if (waste.size() <= 0)
+			{
+				System.out.println("waste is empty!");
+				return;
+			}
+			Card oldCard = waste.get(waste.size()-1);
+			if (move.getToPosition().isFoundation())
+			{
+				int foundationNum = move.getToPosition().getFoundationNum();
+				switch (foundationNum) {
+					case 0:
+						foundationClub.add(oldCard);
+						waste.remove(waste.size()-1);
+						lastFlipCount--;
+						break;
+					case 1:
+						foundationDiamond.add(oldCard);
+						waste.remove(waste.size()-1);
+						lastFlipCount--;
+						break;
+					case 2:
+						foundationSpade.add(oldCard);
+						waste.remove(waste.size()-1);
+						lastFlipCount--;
+						break;
+					case 3:
+						foundationHeart.add(oldCard);
+						waste.remove(waste.size()-1);
+						lastFlipCount--;
+						break;
+					default:
+						System.out.println("Bad foundation number! " + foundationNum);
+						return;
+				}
+			}
+			// if not foundation, must be tabular
+			else
+			{
+				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
+				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				waste.remove(waste.size()-1);
+				lastFlipCount--;
+				return;
+			}
 		}
 		else
 		{
@@ -169,11 +223,17 @@ public final class Game {
 				System.out.println("Attempted to move a face down card");
 				return;
 			}
+			if (fromPosition.getX() == move.getToPosition().getX())
+			{
+				System.out.println("Attempted to move to same tab. Returning.");
+				return;
+			}
 			GamePiece oldPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).getPiece();
-			board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(nullPiece);
+			board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
 			// move to foundation
 			if (move.getToPosition().isFoundation())
 			{
+				// need to add check that card is free
 				int foundationNum = move.getToPosition().getFoundationNum();
 				switch (foundationNum) {
 					case 0:
@@ -195,12 +255,40 @@ public final class Game {
 			}
 			else if (move.getToPosition().getX() >= 0)
 			{
+				int tmpItr = 0;
 				// move to another tab
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
-				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldPiece.getCard()));
+				if (lastCard == null) // empty tab
+				{
+					board.get(move.getToPosition().getX() * boardHeight).setPiece(new GamePiece(true, 0, oldPiece.getCard()));
+				}
+				else
+				{
+					board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldPiece.getCard()));
+					tmpItr = 1;
+				}
+				// add rest of stack
+				for (; tmpItr <= boardHeight; tmpItr++)
+				{
+					GamePiece nextPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).getPiece();
+					if (nextPiece.getCard() != null)
+					{
+						board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).setPiece(new GamePiece(false,0,null));
+						board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1 + tmpItr).setPiece(new GamePiece(true, 1, nextPiece.getCard()));
+					}
+					else
+						break;
+				}
 			}
 		}
 		return;
+	}
+	
+	private List<Position> getStack(int x, int y)
+	{
+		List<Position> stack = new ArrayList<>();
+		
+		return stack;
 	}
 	
 	private void resetDeck()
@@ -240,6 +328,23 @@ public final class Game {
 					return tmpPos;
 				else
 					return null;
+			}
+		}
+		return null;
+	}
+	
+	public Position getLastUnflippedCardInTab(int tab)
+	{
+		for (int y = getBoardHeight() - 1; y>= 0; y--)
+		{
+			Position tmpPos = getBoard().get((tab*getBoardHeight()) + y);
+			GamePiece piece = tmpPos.getPiece();
+			if (piece.getCard() != null)
+			{
+				if (piece.isFlipped())
+					return null;
+				else
+					return tmpPos;
 			}
 		}
 		return null;

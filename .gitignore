@@ -1,0 +1,12 @@
+/.metadata/
+*.swp
+/ConnectFour/.gitignore
+/ConnectFour/.settings/
+/ConnectFour/.project
+/Solitaire/.gitignore
+/Solitaire/.settings/
+/Solitaire/.project
+/Solitaire/bin/
+/TicTacToe/.gitignore
+/TicTacToe/.settings/
+/TicTacToe/.project

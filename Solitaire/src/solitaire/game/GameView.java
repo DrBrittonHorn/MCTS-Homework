@@ -432,6 +432,7 @@ public final class GameView extends JComponent
 				posClick = game.getBoard().get(game.deckPos);
 				h.setMove(game, new Move(null, posClick));
 				moveStart = null;
+				h.responded = true;
 				return;
 			}
 		}
@@ -492,6 +493,7 @@ public final class GameView extends JComponent
 					isWasteSelected = false;
 					selectedFoundation = -1;
 					selectedPosition = -1;
+					h.responded = true;
 				}
 				return;
 			}
@@ -529,6 +531,7 @@ public final class GameView extends JComponent
 					isWasteSelected = false;
 					selectedFoundation = -1;
 					selectedPosition = -1;
+					h.responded = true;
 				}
 				return;
 			}
@@ -565,6 +568,7 @@ public final class GameView extends JComponent
 					isWasteSelected = false;
 					selectedFoundation = -1;
 					selectedPosition = -1;
+					h.responded = true;
 				}
 				return;
 			}
@@ -601,6 +605,7 @@ public final class GameView extends JComponent
 					isWasteSelected = false;
 					selectedFoundation = -1;
 					selectedPosition = -1;
+					h.responded = true;
 				}
 				return;
 			}
@@ -673,6 +678,7 @@ public final class GameView extends JComponent
 					isWasteSelected = false;
 					selectedFoundation = -1;
 					selectedPosition = -1;
+					h.responded = true;
 				}
 				return;
 			}
@@ -706,6 +712,7 @@ public final class GameView extends JComponent
 				isWasteSelected = false;
 				selectedFoundation = -1;
 				selectedPosition = -1;
+				h.responded = true;
 			}
 			return;
 		}

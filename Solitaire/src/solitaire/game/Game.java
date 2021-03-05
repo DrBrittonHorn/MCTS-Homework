@@ -133,6 +133,7 @@ public final class Game {
 	
 	protected void advanceGame(Move move)
 	{
+		System.out.println("Advancing Game");
 		if (move == null)
 			return;
 		if (gameOver)
@@ -293,7 +294,8 @@ public final class Game {
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
 				if (lastCard == null) // empty tab
 				{
-					board.get(move.getToPosition().getX() * boardHeight).setPiece(new GamePiece(true, 0, oldPiece.getCard()));
+					board.get(move.getToPosition().getX() * boardHeight).setPiece(new GamePiece(true, 1, oldPiece.getCard()));
+					tmpItr = 1;
 				}
 				else
 				{
@@ -303,11 +305,18 @@ public final class Game {
 				// add rest of stack
 				for (; tmpItr <= boardHeight; tmpItr++)
 				{
+					/*System.out.println("itr: " + tmpItr);
+					if (board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).getPiece() != null)
+						System.out.println("iterating: " + board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).getPiece().getCard());
+						*/
 					GamePiece nextPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).getPiece();
 					if (nextPiece.getCard() != null)
 					{
 						board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).setPiece(new GamePiece(false,0,null));
-						board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1 + tmpItr).setPiece(new GamePiece(true, 1, nextPiece.getCard()));
+						if (lastCard != null)
+							board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1 + tmpItr).setPiece(new GamePiece(true, 1, nextPiece.getCard()));
+						else
+							board.get(move.getToPosition().getX() * boardHeight + tmpItr).setPiece(new GamePiece(true, 1, nextPiece.getCard()));
 					}
 					else
 						break;
@@ -476,15 +485,18 @@ public final class Game {
 		{
 			if (from.isWaste())
 			{
-				System.out.println(waste.get(waste.size()-1));
+				System.out.println("isValidMove:if: " + waste.get(waste.size()-1));
 				fromCard = waste.get(waste.size()-1);
 			}
 			else
 			{	
-				System.out.println(from.getPiece().getCard().toString());
+				System.out.println("isValidMove:else: " + from.getPiece().getCard().toString());
 				fromCard = from.getPiece().getCard();
+				System.out.println("2isValidMove:else: " + fromCard.toString());
 			}
 		}
+		else
+			System.out.println("isValidMove:from is null");
 		Position to = move.getToPosition();
 		// check from card is a K and to is empty tab
 		if (from != null && from.getPiece() != null

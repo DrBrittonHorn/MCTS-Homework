@@ -26,7 +26,7 @@ public class Human extends Agent{
 	{
 		System.out.println("Setting move");
 		moveToMake = move;
-		responded = true;
+		//responded = true;
 		return game.isValidMove(move);
 	}
 

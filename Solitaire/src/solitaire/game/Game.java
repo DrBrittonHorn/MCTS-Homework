@@ -479,6 +479,7 @@ public final class Game {
 	
 	public boolean isValidMove(Move move)
 	{
+		
 		Position from = move.getFromPosition();
 		Card fromCard = null;
 		if (from != null && from.getPiece() != null)

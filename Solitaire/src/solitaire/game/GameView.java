@@ -345,19 +345,19 @@ public final class GameView extends JComponent
 		List<Card> foundationCards = null;
 		if (i == 0)
 		{
-			foundationCards = game.foundationClub;
+			foundationCards = game.foundation0;
 		}
 		if (i == 1)
 		{
-			foundationCards = game.foundationDiamond;
+			foundationCards = game.foundation1;
 		}
 		if (i == 2)
 		{
-			foundationCards = game.foundationSpade;
+			foundationCards = game.foundation2;
 		}
 		if (i == 3)
 		{
-			foundationCards = game.foundationHeart;
+			foundationCards = game.foundation3;
 		}
 		
 		if (foundationCards.size() > 0)
@@ -464,7 +464,7 @@ public final class GameView extends JComponent
 				&& x >= f0X && x <= f0X + pieceWidth)
 		{
 			System.out.println(isActiveSelection);
-			if (!isActiveSelection && game.foundationClub.size() > 0)
+			if (!isActiveSelection && game.foundation0.size() > 0)
 			{
 				System.out.println("Clicked on F0 w/o active selection");
 				isActiveSelection = true;
@@ -502,7 +502,7 @@ public final class GameView extends JComponent
 		else if (y >= f1Y && y <= f1Y + pieceHeight
 				&& x >= f1X && x <= f1X + pieceWidth)
 		{
-			if (!isActiveSelection && game.foundationDiamond.size() > 0)
+			if (!isActiveSelection && game.foundation1.size() > 0)
 			{
 				System.out.println("Clicked on F1 w/o active selection");
 				isActiveSelection = true;
@@ -539,7 +539,7 @@ public final class GameView extends JComponent
 		else if (y >= f2Y && y <= f2Y + pieceHeight
 				&& x >= f2X && x <= f2X + pieceWidth)
 		{
-			if (!isActiveSelection && game.foundationSpade.size() > 0)
+			if (!isActiveSelection && game.foundation2.size() > 0)
 			{
 				System.out.println("Clicked on F2 w/o active selection");
 				isActiveSelection = true;
@@ -576,7 +576,7 @@ public final class GameView extends JComponent
 		else if (y >= f3Y && y <= f3Y + pieceHeight
 				&& x >= f3X && x <= f3X + pieceWidth)
 		{
-			if (!isActiveSelection && game.foundationHeart.size() > 0)
+			if (!isActiveSelection && game.foundation3.size() > 0)
 			{
 				System.out.println("Clicked on F3 w/o active selection");
 				isActiveSelection = true;

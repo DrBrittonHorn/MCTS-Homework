@@ -18,10 +18,10 @@ public final class Game {
 	// flipped cards
 	public List<Card> waste = new ArrayList<Card>();
 	// cards placed at top. Goes from Ace to K for each suit
-	public List<Card> foundationSpade = new ArrayList<Card>();
-	public List<Card> foundationClub = new ArrayList<Card>();
-	public List<Card> foundationHeart = new ArrayList<Card>();
-	public List<Card> foundationDiamond = new ArrayList<Card>();
+	public List<Card> foundation2 = new ArrayList<Card>();
+	public List<Card> foundation0 = new ArrayList<Card>();
+	public List<Card> foundation3 = new ArrayList<Card>();
+	public List<Card> foundation1 = new ArrayList<Card>();
 	// the board cards
 	public List<Card> tab0 = new ArrayList<Card>();
 	public List<Card> tab1 = new ArrayList<Card>();
@@ -168,24 +168,24 @@ public final class Game {
 			int foundationNum = move.getFromPosition().getFoundationNum();
 			switch (foundationNum) {
 				case 0:
-					if (foundationClub.size() <= 0) return;
-					oldCard = foundationClub.get(foundationClub.size()-1);
-					foundationClub.remove(foundationClub.size()-1);
+					if (foundation0.size() <= 0) return;
+					oldCard = foundation0.get(foundation0.size()-1);
+					foundation0.remove(foundation0.size()-1);
 					break;
 				case 1:
-					if (foundationDiamond.size() <= 0) return;
-					oldCard = foundationDiamond.get(foundationDiamond.size()-1);
-					foundationDiamond.remove(foundationDiamond.size()-1);
+					if (foundation1.size() <= 0) return;
+					oldCard = foundation1.get(foundation1.size()-1);
+					foundation1.remove(foundation1.size()-1);
 					break;
 				case 2:
-					if (foundationSpade.size() <= 0) return;
-					oldCard = foundationSpade.get(foundationSpade.size()-1);
-					foundationSpade.remove(foundationSpade.size()-1);
+					if (foundation2.size() <= 0) return;
+					oldCard = foundation2.get(foundation2.size()-1);
+					foundation2.remove(foundation2.size()-1);
 					break;
 				case 3:
-					if (foundationHeart.size() <= 0) return;
-					oldCard = foundationHeart.get(foundationHeart.size()-1);
-					foundationHeart.remove(foundationHeart.size()-1);
+					if (foundation3.size() <= 0) return;
+					oldCard = foundation3.get(foundation3.size()-1);
+					foundation3.remove(foundation3.size()-1);
 					break;
 				default:
 					System.out.println("Bad foundation number!");
@@ -211,22 +211,22 @@ public final class Game {
 				int foundationNum = move.getToPosition().getFoundationNum();
 				switch (foundationNum) {
 					case 0:
-						foundationClub.add(oldCard);
+						foundation0.add(oldCard);
 						waste.remove(waste.size()-1);
 						lastFlipCount--;
 						break;
 					case 1:
-						foundationDiamond.add(oldCard);
+						foundation1.add(oldCard);
 						waste.remove(waste.size()-1);
 						lastFlipCount--;
 						break;
 					case 2:
-						foundationSpade.add(oldCard);
+						foundation2.add(oldCard);
 						waste.remove(waste.size()-1);
 						lastFlipCount--;
 						break;
 					case 3:
-						foundationHeart.add(oldCard);
+						foundation3.add(oldCard);
 						waste.remove(waste.size()-1);
 						lastFlipCount--;
 						break;
@@ -271,16 +271,16 @@ public final class Game {
 				int foundationNum = move.getToPosition().getFoundationNum();
 				switch (foundationNum) {
 					case 0:
-						foundationClub.add(oldPiece.getCard());
+						foundation0.add(oldPiece.getCard());
 						break;
 					case 1:
-						foundationDiamond.add(oldPiece.getCard());
+						foundation1.add(oldPiece.getCard());
 						break;
 					case 2:
-						foundationSpade.add(oldPiece.getCard());
+						foundation2.add(oldPiece.getCard());
 						break;
 					case 3:
-						foundationHeart.add(oldPiece.getCard());
+						foundation3.add(oldPiece.getCard());
 						break;
 					default:
 						System.out.println("Bad foundation number!");
@@ -493,16 +493,16 @@ public final class Game {
 			{
 				switch (from.getFoundationNum()) {
 				case 0:
-					fromCard = foundationClub.get(foundationClub.size()-1);
+					fromCard = foundation0.get(foundation0.size()-1);
 					break;
 				case 1:
-					fromCard = foundationDiamond.get(foundationDiamond.size()-1);
+					fromCard = foundation1.get(foundation1.size()-1);
 					break;
 				case 2:
-					fromCard = foundationSpade.get(foundationSpade.size()-1);
+					fromCard = foundation2.get(foundation2.size()-1);
 					break;
 				case 3:
-					fromCard = foundationHeart.get(foundationHeart.size()-1);
+					fromCard = foundation3.get(foundation3.size()-1);
 					break;
 				default:
 					System.out.println("Bad foundation number!");
@@ -547,42 +547,42 @@ public final class Game {
 				Card toCard = null;
 				switch (to.getFoundationNum()) {
 				case 0:
-					if(foundationClub.isEmpty()) {
+					if(foundation0.isEmpty()) {
 						if(fromCard.rank!=1)
 							return false;
 						else return true;
 					} else {
-						toCard = foundationClub.get(foundationClub.size()-1);
+						toCard = foundation0.get(foundation0.size()-1);
 						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
 					}
 					break;
 				case 1:
-					if(foundationDiamond.isEmpty()) {
+					if(foundation1.isEmpty()) {
 						if(fromCard.rank!=1)
 							return false;
 						else return true;
 					} else {
-						toCard = foundationDiamond.get(foundationDiamond.size()-1);
+						toCard = foundation1.get(foundation1.size()-1);
 						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
 					}
 					break;
 				case 2:
-					if(foundationSpade.isEmpty()) {
+					if(foundation2.isEmpty()) {
 						if(fromCard.rank!=1)
 							return false;
 						else return true;
 					} else {
-						toCard = foundationSpade.get(foundationSpade.size()-1);
+						toCard = foundation2.get(foundation2.size()-1);
 						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
 					}
 					break;
 				case 3:
-					if(foundationHeart.isEmpty()) {
+					if(foundation3.isEmpty()) {
 						if(fromCard.rank!=1)
 							return false;
 						else return true;
 					} else {
-						toCard = foundationHeart.get(foundationHeart.size()-1);
+						toCard = foundation3.get(foundation3.size()-1);
 						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
 					}
 					break;

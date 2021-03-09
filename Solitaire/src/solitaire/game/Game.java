@@ -488,11 +488,30 @@ public final class Game {
 				System.out.println("isValidMove:if: " + waste.get(waste.size()-1));
 				fromCard = waste.get(waste.size()-1);
 			}
-			else
-			{	
+			else if (from.isFoundation())
+			{
+				switch (from.getFoundationNum()) {
+				case 0:
+					fromCard = foundationClub.get(foundationClub.size()-1);
+					break;
+				case 1:
+					fromCard = foundationDiamond.get(foundationDiamond.size()-1);
+					break;
+				case 2:
+					fromCard = foundationSpade.get(foundationSpade.size()-1);
+					break;
+				case 3:
+					fromCard = foundationHeart.get(foundationHeart.size()-1);
+					break;
+				default:
+					System.out.println("Bad foundation number!");
+					return false;
+				}
+				System.out.println("isValidMove:foundation else: " + fromCard.toString());
+			} else {	
 				System.out.println("isValidMove:else: " + from.getPiece().getCard().toString());
 				fromCard = from.getPiece().getCard();
-				System.out.println("2isValidMove:else: " + fromCard.toString());
+				//System.out.println("2isValidMove:else: " + fromCard.toString());
 			}
 		}
 		else
@@ -505,6 +524,72 @@ public final class Game {
 				&& board.get(to.getX() * boardHeight).getPiece().getCard() == null)
 		{
 			return false;
+		}
+		if(from != null && to != null && fromCard!= null) {
+			if(to.getPiece().getCard()!=null) {
+				Suit fromSuit = fromCard.suit;
+				int fromRank = fromCard.rank;
+				Suit toSuit = to.getPiece().getCard().suit;
+				int toRank = to.getPiece().getCard().rank;
+				if(toRank- fromRank != 1) {
+					return false;
+				} else {
+					if((fromSuit==Suit.CLUB || fromSuit == Suit.SPADE) &&
+							!(toSuit==Suit.DIAMOND || toSuit == Suit.HEART)) {
+						return false;
+					} else if((fromSuit==Suit.DIAMOND || fromSuit == Suit.HEART) &&
+							!(toSuit==Suit.CLUB || toSuit == Suit.SPADE)) {
+						return false;
+					}
+				}
+			} else if(to.isFoundation()) {
+				Card toCard = null;
+				switch (to.getFoundationNum()) {
+				case 0:
+					if(foundationClub.isEmpty()) {
+						if(fromCard.rank!=1)
+							return false;
+						else return true;
+					} else {
+						toCard = foundationClub.get(foundationClub.size()-1);
+						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
+					}
+					break;
+				case 1:
+					if(foundationDiamond.isEmpty()) {
+						if(fromCard.rank!=1)
+							return false;
+						else return true;
+					} else {
+						toCard = foundationDiamond.get(foundationDiamond.size()-1);
+						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
+					}
+					break;
+				case 2:
+					if(foundationSpade.isEmpty()) {
+						if(fromCard.rank!=1)
+							return false;
+						else return true;
+					} else {
+						toCard = foundationSpade.get(foundationSpade.size()-1);
+						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
+					}
+					break;
+				case 3:
+					if(foundationHeart.isEmpty()) {
+						if(fromCard.rank!=1)
+							return false;
+						else return true;
+					} else {
+						toCard = foundationHeart.get(foundationHeart.size()-1);
+						if(fromCard.suit != toCard.suit || (fromCard.rank-toCard.rank)!=1) return false;
+					}
+					break;
+				default:
+					System.out.println("Bad foundation number!");
+					return false;
+				}
+			}
 		}
 		return true;
 	}

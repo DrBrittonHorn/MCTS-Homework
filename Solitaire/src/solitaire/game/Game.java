@@ -479,6 +479,7 @@ public final class Game {
 	
 	public boolean isValidMove(Move move)
 	{
+		
 		Position from = move.getFromPosition();
 		Card fromCard = null;
 		if (from != null && from.getPiece() != null)
@@ -487,6 +488,27 @@ public final class Game {
 			{
 				System.out.println("isValidMove:if: " + waste.get(waste.size()-1));
 				fromCard = waste.get(waste.size()-1);
+			}
+			else if (from.isFoundation())
+			{
+				switch (from.getFoundationNum()) {
+				case 0:
+					fromCard = foundationClub.get(foundationClub.size()-1);
+					break;
+				case 1:
+					fromCard = foundationDiamond.get(foundationClub.size()-1);
+					break;
+				case 2:
+					fromCard = foundationSpade.get(foundationClub.size()-1);
+					break;
+				case 3:
+					fromCard = foundationHeart.get(foundationClub.size()-1);
+					break;
+				default:
+					System.out.println("Bad foundation number!");
+					return false;
+				}
+				System.out.println("isValidMove:foundation else: " + fromCard.toString());
 			}
 			else
 			{	

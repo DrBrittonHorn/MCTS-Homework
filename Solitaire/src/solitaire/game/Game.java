@@ -323,6 +323,9 @@ public final class Game {
 				}
 			}
 		}
+		if(isWinningBoard(board) == 1) {
+			gameOver = true;
+		}
 		return;
 	}
 	
@@ -394,59 +397,10 @@ public final class Game {
 	
 	public int isWinningBoard(List<Position> origBoard)
 	{
-		int[][] tempBoard = new int[boardWidth][boardHeight];
-		for (int x = 0; x < boardWidth; x++)
-		{
-			for (int y = 0; y < boardHeight; y++)
-			{
-				tempBoard[x][y] = origBoard.get((x * boardHeight) + y).getPiece().getOwner();
-			}
-		}
-		checkValidBoard(tempBoard);
-		// vertical win conditions
-		for (int i = 0; i < 3; i++)
-		{
-			if (tempBoard[i][0] + tempBoard[i][1] + tempBoard[i][2] == 3)
-			{
-				//System.out.println("vertical win for: 1");
-				return 1;
-			}
-			if (tempBoard[i][0] + tempBoard[i][1] + tempBoard[i][2] == -3)
-			{
-				//System.out.println("vertical win for: -1");
-				return -1;
-			}
-		}
-		// horizontal win conditions
-		for (int i = 0; i < 3; i++)
-		{
-			if (tempBoard[0][i] + tempBoard[1][i] + tempBoard[2][i] == 3)
-			{
-				//System.out.println("horizontal win for: 1");
-				return 1;
-			}
-			if (tempBoard[0][i] + tempBoard[1][i] + tempBoard[2][i] == -3)
-			{
-				//System.out.println("horizontal win for: -1");
-				return -1;
-			}
-		}
-		// diagonal win conditions
-		if ((tempBoard[0][0] + tempBoard[1][1] + tempBoard[2][2] == 3)
-			|| (tempBoard[2][0] + tempBoard[1][1] + tempBoard[0][2] == 3))
-		{
-			//System.out.println("diagonal win for: 1");
+		if(foundation0.size() == 13  && foundation1.size()== 13 &&
+				foundation2.size() == 13 && foundation3.size() == 13) {
 			return 1;
-		}
-		if ((tempBoard[0][0] + tempBoard[1][1] + tempBoard[2][2] == -3)
-				|| (tempBoard[2][0] + tempBoard[1][1] + tempBoard[0][2] == -3))
-		{
-				//System.out.println("diagonal win for: -1");
-				return -1;
-		}
-		
-		// no win condition found
-		return 0;
+		} else return 0;
 	}
 	
 	public boolean gameOver()
@@ -473,7 +427,16 @@ public final class Game {
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
 		ArrayList<Move> validMoves = new ArrayList<Move>();
+		//get all from cards < the ones that you CAN move from. this means going back through each tab and finding the last card
+		// in the pattern. it also means the foundation cards that exist and the waste card if that is there
+		// nnext get all to cards < the ones that you can move TO. this is the first of all foundation cards and the last card 
+		// in every tab. it also means empty tabs
 		
+		// for each from card check all of the to cards and store in validMoves if it works
+		// for tab: alternating color and decreasing by one
+		// for foundation: same suit and increasing by one OR ace
+		// for empty tab: is king
+		// also the deck is a possible turn, as is flipping an unflipped card
 		return validMoves;
 	}
 	

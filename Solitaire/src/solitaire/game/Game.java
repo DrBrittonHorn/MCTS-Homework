@@ -563,17 +563,18 @@ public final class Game {
 		return true;
 	}
 	
-	public List<Position> simulateMove(List<Position> origBoard, Move move)
+	public Game simulateMove(List<Position> origBoard, Move move)
 	{
+		Game g = this.clone();
 		if (isWinningBoard(origBoard) != 0)
 		{
-//			System.out.println("Game already won by: " + isWinningBoard(origBoard));
+			System.out.println("Game already won by: " + isWinningBoard(origBoard));
 			return null;
 		}
 		//List<Position> newBoard = new ArrayList<Position>(origBoard);
-		List<Position> newBoard = copyBoard(origBoard);
+		g.advanceGame(move);
 		
-		return newBoard;
+		return g;
 	}
 	
 	public void printBoardText(List<Position> board)
@@ -627,7 +628,8 @@ public final class Game {
 		return lastFlipCount;
 	}
 	
-	public Game copy()
+	@Override
+	public Game clone()
 	{
 		Game g = new Game(true);
 		//copy board

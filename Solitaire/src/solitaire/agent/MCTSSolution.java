@@ -21,8 +21,8 @@ public class MCTSSolution extends Agent {
 		// initialize class variables and create root node (passed in game state)
 		this.game = game;
 		Node root = new Node();
-		root.boardState = game.copyBoard(game.getBoard());
-		root.turn = game.getTurn();
+		root.boardState = this.game.clone();
+		root.turn = this.game.getTurn();
 		
 		// here's where the magic happens
 		performMCTS(root, timeLimit);
@@ -132,24 +132,24 @@ public class MCTSSolution extends Agent {
 		// set the node's turn
 		int turn = leaf.turn;
 		// copy board so we don't mess any future nodes up
-		List<Position> rolloutBoard = game.copyBoard(leaf.boardState);
+		Game rolloutBoard = leaf.boardState.clone();
 		// get possible next moves
-		List<Move> validMoves = game.getValidMoves(rolloutBoard, turn);
+		List<Move> validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		
 		// continue getting the next board until we reach a terminal state
-		while (game.isWinningBoard(rolloutBoard) == 0 && !validMoves.isEmpty())
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty())
 		{
 			int randInt = rand.nextInt(validMoves.size());
 			// simulate move with random validMove choice
-			rolloutBoard = game.simulateMove(rolloutBoard, validMoves.get(randInt));
+			rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, validMoves.get(randInt));
 			// switch player turns
-			turn *= -1;
+			//turn *= -1;
 			// set validMoves for next loop iteration
-			validMoves = game.getValidMoves(rolloutBoard, turn);
+			validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		}
 
 		// return the game result
-		return game.isWinningBoard(rolloutBoard);
+		return rolloutBoard.isWinningBoard(rolloutBoard.board);
 	}
 	
 	private void backpropagate(Node node, int result)
@@ -176,7 +176,7 @@ public class MCTSSolution extends Agent {
 	
 	private void addChildren(Node node)
 	{
-		List<Move> validMoves = game.getValidMoves(node.boardState, node.turn);
+		List<Move> validMoves = node.boardState.getValidMoves(node.boardState.board, node.turn);
 		// create children for each valid move
 		for (Move p : validMoves)
 		{
@@ -186,10 +186,10 @@ public class MCTSSolution extends Agent {
 			newChild.turn = node.turn * -1;
 			newChild.parent = node;
 			// get child's board state by simulating the valid move from current board state
-			newChild.boardState = game.simulateMove(node.boardState, newChild.moveToGetHere);
+			newChild.boardState = node.boardState.simulateMove(node.boardState.board, newChild.moveToGetHere);
 			
 			// check if terminal node
-			if (game.isWinningBoard(newChild.boardState) != 0 || game.getValidMoves(newChild.boardState, newChild.turn).isEmpty())
+			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty())
 			{
 				newChild.isTerminal = true;
 				newChild.isVisited = false;
@@ -257,7 +257,7 @@ public class MCTSSolution extends Agent {
 		public List<Node> children;
 		public int simulations;
 		public double wins;
-		public List<Position> boardState = null;
+		public Game boardState = null;
 		public int turn;
 		public boolean isTerminal;
 		public int winner;
@@ -318,7 +318,7 @@ public class MCTSSolution extends Agent {
 		public void printNode()
 		{
 			System.out.println("===== Node Begin =====");
-			game.printBoardText(this.boardState);
+			boardState.printBoardText(boardState.board);
 			System.out.println("wins: " + this.wins + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", turn: " + this.turn + 
 					", isTerminal: " + this.isTerminal + ", winner: " + this.winner + 
 					", moveToGetHere: " + ((this.moveToGetHere != null) ? this.moveToGetHere.getToPosition().getPiece().getOwner() + "@" + this.moveToGetHere.getToPosition().getX() + "," + this.moveToGetHere.getToPosition().getY() 

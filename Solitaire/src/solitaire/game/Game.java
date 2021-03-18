@@ -23,13 +23,13 @@ public final class Game {
 	public List<Card> foundation3 = new ArrayList<Card>();
 	public List<Card> foundation1 = new ArrayList<Card>();
 	// the board cards
-	public List<Card> tab0 = new ArrayList<Card>();
-	public List<Card> tab1 = new ArrayList<Card>();
-	public List<Card> tab2 = new ArrayList<Card>();
-	public List<Card> tab3 = new ArrayList<Card>();
-	public List<Card> tab4 = new ArrayList<Card>();
-	public List<Card> tab5 = new ArrayList<Card>();
-	public List<Card> tab6 = new ArrayList<Card>();
+//	public List<Card> tab0 = new ArrayList<Card>();
+//	public List<Card> tab1 = new ArrayList<Card>();
+//	public List<Card> tab2 = new ArrayList<Card>();
+//	public List<Card> tab3 = new ArrayList<Card>();
+//	public List<Card> tab4 = new ArrayList<Card>();
+//	public List<Card> tab5 = new ArrayList<Card>();
+//	public List<Card> tab6 = new ArrayList<Card>();
 	private boolean gameOver;
 	public boolean isSingleFlip = false;
 	private int lastFlipCount;
@@ -84,6 +84,11 @@ public final class Game {
 			deck.remove(0);
 		}
 		*/
+	}
+	
+	public Game(boolean basicSetup)
+	{
+		
 	}
 	
 	public List<Position> getBoard()
@@ -620,5 +625,40 @@ public final class Game {
 	public int getLastFlipCount()
 	{
 		return lastFlipCount;
+	}
+	
+	public Game copy()
+	{
+		Game g = new Game(true);
+		//copy board
+		g.board = copyBoard(this.board);
+		//iterate foundations
+		for(Card c: foundation0)
+		{
+			g.foundation0.add(c);
+		}
+		for(Card c: foundation1)
+		{
+			g.foundation1.add(c);
+		}
+		for(Card c: foundation2)
+		{
+			g.foundation2.add(c);
+		}
+		for(Card c: foundation3)
+		{
+			g.foundation3.add(c);
+		}
+		//iterate deck
+		for(Card c: deck)
+		{
+			g.deck.add(c);
+		}
+		//iterate waste
+		for(Card c: waste)
+		{
+			g.waste.add(c);
+		}
+		return g;
 	}
 }

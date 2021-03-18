@@ -661,6 +661,11 @@ public final class Game {
 		{
 			g.waste.add(c);
 		}
+		
+		g.turn = this.turn;
+		g.lastFlipCount = this.lastFlipCount;
+		g.gameOver = this.gameOver;
+		
 		return g;
 	}
 }

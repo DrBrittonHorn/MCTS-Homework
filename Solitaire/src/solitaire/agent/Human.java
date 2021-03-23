@@ -15,6 +15,15 @@ public class Human extends Agent{
 	@Override
 	public Move getMove(Game game, long timeDue) {
 		responded = false;
+		for (Move move : game.getValidMoves(game.board, 0))
+		{
+			if(move.getFromPosition() == null)
+				System.out.println("null -> " + move.getToPosition());
+			else
+			{
+				System.out.println(move.getFromPosition() + " -> " + move.getToPosition());
+			}
+		}
 		if (moveToMake == null)
 			return null;
 		Move returnMove = moveToMake.shallowCopy();

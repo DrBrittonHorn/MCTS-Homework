@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import solitaire.agent.Agent;
 import solitaire.agent.Human;
@@ -433,105 +434,115 @@ public final class Game {
 	
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
-		ArrayList<Move> validMoves = new ArrayList<Move>();
-		// get from moves
-		Set<Position> fromPositions = new HashSet<Position>();
-		// add waste from
-		if (waste.size() > 0)
-			fromPositions.add(board.get(wastePos));
-		// add foundation from
-		if (foundation0.size() > 0)
-			fromPositions.add(board.get(f0Pos));
-		if (foundation1.size() > 0)
-			fromPositions.add(board.get(f1Pos));
-		if (foundation2.size() > 0)
-			fromPositions.add(board.get(f2Pos));
-		if (foundation3.size() > 0)
-			fromPositions.add(board.get(f3Pos));
-		// add tabular from
-		for (int tab = 0; tab < 7; tab++)
-		{
-			if (board.get(tab * boardHeight).getPiece().getCard() != null)
-			{
-				// valid card in tab
-				Position flipped = getLastFlippedCardInTab(tab);
-				if (flipped != null)
-				{
-					fromPositions.add(flipped);
-					// get unflipped cards as long as the alternate color and dec rank
-					// this doesn't work yet
-					for (int y = flipped.getY()-1; y > 0; y--)
-					{
-						Position p = board.get((tab*boardHeight) + y);
-						if (p.getPiece().getCard() != null && 
-								p.getPiece().isFlipped() && 
-								board.get((tab*boardHeight) + (y+1)).getPiece().getCard() != null &&
-								p.getPiece().getCard().rank == board.get((tab*boardHeight) + (y+1)).getPiece().getCard().rank &&
-								((p.getPiece().getCard().suit==Suit.CLUB || p.getPiece().getCard().suit == Suit.SPADE) &&
-										!(board.get((tab*boardHeight) + (y+1)).getPiece().getCard().suit==Suit.DIAMOND || 
-										board.get((tab*boardHeight) + (y+1)).getPiece().getCard().suit == Suit.HEART)))
-							fromPositions.add(p);
+		Set<Move> validMoves = new HashSet<Move>();
+		ArrayList<Position> toCards = new ArrayList<Position>();
+		ArrayList<Position> fromCards = new ArrayList<Position>();
+		//Add tabular cards
+		for(int i = 0; i < 7; i++) {
+			if(getLastFlippedCardInTab(i)!= null) {
+				toCards.add(getLastFlippedCardInTab(i));
+				fromCards.add(getLastFlippedCardInTab(i));
+				int j = getLastFlippedCardInTab(i).getY()-1;
+				Position prev = getLastFlippedCardInTab(i);
+				while(j>=0 && board.get(i*boardHeight +j).getPiece().isFlipped()) {
+					int prevRank = prev.getPiece().getCard().rank;
+					Suit prevSuit = prev.getPiece().getCard().suit;
+					int curRank = board.get(i*boardHeight + j).getPiece().getCard().rank;
+					Suit curSuit = board.get(i*boardHeight + j).getPiece().getCard().suit;
+					if(curRank - prevRank == 1) {
+						if((curSuit == Suit.CLUB || curSuit == Suit.SPADE) &&
+								(prevSuit == Suit.DIAMOND ||prevSuit == Suit.HEART)) {
+							fromCards.add(board.get(i*boardHeight + j));
+						} else if((curSuit == Suit.DIAMOND || curSuit == Suit.HEART) &&
+								(prevSuit == Suit.CLUB ||prevSuit == Suit.SPADE)) {
+							fromCards.add(board.get(i*boardHeight + j));
+						} else {
+							j = -1;
+						}
+					} else {
+						j = -1;
+					}
+					j = j-1;
+				}
+			} else if(getLastUnflippedCardInTab(i) != null) {
+				validMoves.add(new Move(null, getLastUnflippedCardInTab(i)));
+			}
+		}
+		//Add foundation cards
+		if(foundation0.size()>= 1) {
+			Position found0 = new Position(-1, -1, new GamePiece(true, 1, foundation0.get(foundation0.size()-1)), false, false, true, 0);			
+			toCards.add(found0);
+			fromCards.add(found0);
+		}
+		if(foundation1.size()>=1) {
+			Position found1 = new Position(-1, -1, new GamePiece(true, 1, foundation1.get(foundation1.size()-1)), false, false, true, 0);
+			toCards.add(found1);
+			fromCards.add(found1);
+		}
+		if(foundation2.size()>=1) {
+			Position found2 = new Position(-1, -1, new GamePiece(true, 1, foundation2.get(foundation2.size()-1)), false, false, true, 0);
+			toCards.add(found2);
+			fromCards.add(found2);
+		}
+		if(foundation3.size()>=1) {
+			Position found3 = new Position(-1, -1, new GamePiece(true, 1, foundation3.get(foundation3.size()-1)), false, false, true, 0);	
+			toCards.add(found3);
+			fromCards.add(found3);
+		}
+		// add waste cards
+		if(waste.size()>=1) {
+			Position lastWaste = new Position(-1, -1, new GamePiece(true, 1, waste.get(waste.size()-1)),false, true, false, -1);
+			fromCards.add(lastWaste);
+		}
+		// add top deck card
+		validMoves.add(new Move(null,board.get(deckPos)));
+		
+		for(int i = 0; i < toCards.size(); i++) {
+			for(int j = 0; j < fromCards.size(); j++) {
+				Position fromPos = fromCards.get(j);
+				Position toPos = toCards.get(i);
+				int fromRank = fromPos.getPiece().getCard().rank;
+				Suit fromSuit = fromPos.getPiece().getCard().suit;
+				int toRank = toPos.getPiece().getCard().rank;
+				Suit toSuit = toPos.getPiece().getCard().suit;
+				if(!(fromRank == toRank && fromSuit == toSuit)) {
+					if(toPos.isFoundation()) {
+						if(fromSuit == toSuit && fromRank - toRank == 1) {
+							validMoves.add(new Move(fromPos, toPos));
+						}
+					} else if(fromRank == 1 && !fromPos.isFoundation()) {
+						if(foundation0.size() == 0) {
+							validMoves.add(new Move(fromPos, board.get(f0Pos)));
+						} else if(foundation1.size() == 0) {
+							validMoves.add(new Move(fromPos, board.get(f1Pos)));
+						} else if(foundation2.size() == 0) {
+							validMoves.add(new Move(fromPos, board.get(f2Pos)));
+						} else if(foundation3.size() == 0) {
+							validMoves.add(new Move(fromPos, board.get(f3Pos)));
+						} 
+					} else if(toRank - fromRank == 1) {
+						if((fromSuit == Suit.HEART || fromSuit == Suit.DIAMOND) &&
+								(toSuit == Suit.SPADE || toSuit == Suit.CLUB)) {
+							if(fromPos.getY() != toPos.getY()) {
+								validMoves.add(new Move(fromPos, toPos));
+							}
+						} else if ((toSuit == Suit.HEART || toSuit == Suit.DIAMOND) &&
+								(fromSuit == Suit.SPADE || fromSuit == Suit.CLUB)) {
+							if(fromPos.getY() != toPos.getY()) {
+								validMoves.add(new Move(fromPos, toPos));
+							}
+						}
+					} else if(fromRank == 13 ) {
+						for(int tab=0; tab<7; tab++) {
+							if(board.get(tab*boardHeight).getPiece().getCard() == null) {
+								validMoves.add(new Move(fromPos, board.get(tab*boardHeight)));
+							}
+						}
 					}
 				}
 			}
-		}	
-		
-		// build single click moves (card flips)
-		if (deck.size() > 0 || waste.size() > 0) // can flip the deck if there are more deck cards or resetting with waste
-			validMoves.add(new Move(null, board.get(deckPos)));
-		
-		// build to moves
-		Set<Position> toPositions = new HashSet<Position>();
-		toPositions.add(board.get(f0Pos));
-		toPositions.add(board.get(f1Pos));
-		toPositions.add(board.get(f2Pos));
-		toPositions.add(board.get(f3Pos));
-		if (waste.size() > 0)
-			toPositions.add(board.get(wastePos));
-			
-		// get to locations for tabs
-		for (int tab = 0; tab < 7; tab++)
-		{
-			Position tabTop = board.get(tab*boardHeight);
-			if (tabTop.getPiece().getCard() == null) // empty tab
-				toPositions.add(tabTop);
-			else
-			{
-				Position unflipped = getLastUnflippedCardInTab(tab);
-				if (unflipped != null) // tab consists of unflipped cards
-					validMoves.add(new Move(null, unflipped));
-				else // flipped cards present
-				{
-					Position flipped = getLastFlippedCardInTab(tab);
-					if (flipped != null)
-						toPositions.add(flipped);
-				}
-			}
-				
 		}
-		
-		for (Position from : fromPositions)
-		{
-			for (Position to : toPositions)
-			{
-				Move m = new Move(from, to);
-				if (!from.equals(to) && isValidMove(m))
-					validMoves.add(m);
-			}
-		}
-	
-		
-		//get all from cards < the ones that you CAN move from. this means going back through each tab and finding the last card
-		// in the pattern. it also means the foundation cards that exist and the waste card if that is there
-		// nnext get all to cards < the ones that you can move TO. this is the first of all foundation cards and the last card 
-		// in every tab. it also means empty tabs
-		
-		// for each from card check all of the to cards and store in validMoves if it works
-		// for tab: alternating color and decreasing by one
-		// for foundation: same suit and increasing by one OR ace
-		// for empty tab: is king
-		// also the deck is a possible turn, as is flipping an unflipped card
-		return validMoves;
+		return validMoves.stream().collect(Collectors.toList());
 	}
 	
 	public boolean isValidMove(Move move)

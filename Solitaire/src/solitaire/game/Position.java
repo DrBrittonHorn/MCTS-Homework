@@ -98,5 +98,50 @@ public class Position {
 		Position copy = new Position(this.x, this.y, this.p, this.deck, this.waste, this.foundation, this.foundationNum);
 		return copy;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "[isDeck: " + deck + 
+				", iswaste: " + waste +
+				", isFoundation: " + foundation +  
+				", foundationNum: " + foundationNum + 
+				", Card: " + ((p.getCard() == null) ? "null" : p.getCard()) + "]";
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o == this) { 
+            return true; 
+        } 
+  
+        if (!(o instanceof Position)) { 
+            return false; 
+        } 
+          
+        Position p = (Position) o; 
+          
+        return p.x == this.x &&
+        p.y == this.y &&
+        p.foundationNum == this.foundationNum &&
+        p.foundation == this.foundation &&
+        p.waste == this.waste &&
+        p.deck == this.deck &&
+        p.p == this.p;
+	}
+	
+	@Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + x;
+        result = 31 * result + y;
+        result = 31 * result + foundationNum;
+        result = 31 * result + (foundation ? 1 : 0);
+        result = 31 * result + (foundation ? 1 : 0);
+        result = 31 * result + (foundation ? 1 : 0);
+        result = 31 * result + (p == null ? 0 : p.hashCode());
+        return result;
+    }
 }
 

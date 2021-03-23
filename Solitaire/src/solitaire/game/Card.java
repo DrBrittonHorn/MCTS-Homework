@@ -40,4 +40,28 @@ public class Card {
 		}
 		return stringRank + " " + this.suit;
 	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o == this) { 
+            return true; 
+        } 
+  
+        if (!(o instanceof Card)) { 
+            return false; 
+        } 
+          
+        Card c = (Card) o; 
+          
+        return c.suit == this.suit && c.rank == this.rank;
+	}
+	
+	@Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + suit.hashCode();
+        result = 31 * result + rank;
+        return result;
+    }
 }

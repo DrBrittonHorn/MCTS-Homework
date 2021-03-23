@@ -2,8 +2,10 @@ package solitaire.game;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import solitaire.agent.Agent;
 import solitaire.agent.Human;
@@ -145,7 +147,7 @@ public final class Game {
 			return;
 		if (!isValidMove(move))
 		{
-			System.out.println("Invalid move attempted: " + move.toString());
+			System.out.println("Invalid move attempted: " + move.getFromPosition() + ":::" + move.getToPosition());
 			return;
 		}
 		// single click moves are always in toPosition
@@ -432,6 +434,93 @@ public final class Game {
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
 		ArrayList<Move> validMoves = new ArrayList<Move>();
+		// get from moves
+		Set<Position> fromPositions = new HashSet<Position>();
+		// add waste from
+		if (waste.size() > 0)
+			fromPositions.add(board.get(wastePos));
+		// add foundation from
+		if (foundation0.size() > 0)
+			fromPositions.add(board.get(f0Pos));
+		if (foundation1.size() > 0)
+			fromPositions.add(board.get(f1Pos));
+		if (foundation2.size() > 0)
+			fromPositions.add(board.get(f2Pos));
+		if (foundation3.size() > 0)
+			fromPositions.add(board.get(f3Pos));
+		// add tabular from
+		for (int tab = 0; tab < 7; tab++)
+		{
+			if (board.get(tab * boardHeight).getPiece().getCard() != null)
+			{
+				// valid card in tab
+				Position flipped = getLastFlippedCardInTab(tab);
+				if (flipped != null)
+				{
+					fromPositions.add(flipped);
+					// get unflipped cards as long as the alternate color and dec rank
+					// this doesn't work yet
+					for (int y = flipped.getY()-1; y > 0; y--)
+					{
+						Position p = board.get((tab*boardHeight) + y);
+						if (p.getPiece().getCard() != null && 
+								p.getPiece().isFlipped() && 
+								board.get((tab*boardHeight) + (y+1)).getPiece().getCard() != null &&
+								p.getPiece().getCard().rank == board.get((tab*boardHeight) + (y+1)).getPiece().getCard().rank &&
+								((p.getPiece().getCard().suit==Suit.CLUB || p.getPiece().getCard().suit == Suit.SPADE) &&
+										!(board.get((tab*boardHeight) + (y+1)).getPiece().getCard().suit==Suit.DIAMOND || 
+										board.get((tab*boardHeight) + (y+1)).getPiece().getCard().suit == Suit.HEART)))
+							fromPositions.add(p);
+					}
+				}
+			}
+		}	
+		
+		// build single click moves (card flips)
+		if (deck.size() > 0 || waste.size() > 0) // can flip the deck if there are more deck cards or resetting with waste
+			validMoves.add(new Move(null, board.get(deckPos)));
+		
+		// build to moves
+		Set<Position> toPositions = new HashSet<Position>();
+		toPositions.add(board.get(f0Pos));
+		toPositions.add(board.get(f1Pos));
+		toPositions.add(board.get(f2Pos));
+		toPositions.add(board.get(f3Pos));
+		if (waste.size() > 0)
+			toPositions.add(board.get(wastePos));
+			
+		// get to locations for tabs
+		for (int tab = 0; tab < 7; tab++)
+		{
+			Position tabTop = board.get(tab*boardHeight);
+			if (tabTop.getPiece().getCard() == null) // empty tab
+				toPositions.add(tabTop);
+			else
+			{
+				Position unflipped = getLastUnflippedCardInTab(tab);
+				if (unflipped != null) // tab consists of unflipped cards
+					validMoves.add(new Move(null, unflipped));
+				else // flipped cards present
+				{
+					Position flipped = getLastFlippedCardInTab(tab);
+					if (flipped != null)
+						toPositions.add(flipped);
+				}
+			}
+				
+		}
+		
+		for (Position from : fromPositions)
+		{
+			for (Position to : toPositions)
+			{
+				Move m = new Move(from, to);
+				if (!from.equals(to) && isValidMove(m))
+					validMoves.add(m);
+			}
+		}
+	
+		
 		//get all from cards < the ones that you CAN move from. this means going back through each tab and finding the last card
 		// in the pattern. it also means the foundation cards that exist and the waste card if that is there
 		// nnext get all to cards < the ones that you can move TO. this is the first of all foundation cards and the last card 
@@ -449,16 +538,18 @@ public final class Game {
 	{
 		
 		Position from = move.getFromPosition();
+		Position to = move.getToPosition();
 		Card fromCard = null;
 		if (from != null && from.getPiece() != null)
 		{
 			if (from.isWaste())
 			{
-				System.out.println("isValidMove:if: " + waste.get(waste.size()-1));
+				//System.out.println("isValidMove:if: " + waste.get(waste.size()-1));
 				fromCard = waste.get(waste.size()-1);
 			}
 			else if (from.isFoundation())
 			{
+				if (to.isFoundation()) return false;
 				switch (from.getFoundationNum()) {
 				case 0:
 					fromCard = foundation0.get(foundation0.size()-1);
@@ -476,16 +567,16 @@ public final class Game {
 					System.out.println("Bad foundation number!");
 					return false;
 				}
-				System.out.println("isValidMove:foundation else: " + fromCard.toString());
+				//System.out.println("isValidMove:foundation else: " + fromCard.toString());
 			} else {	
-				System.out.println("isValidMove:else: " + from.getPiece().getCard().toString());
+				//System.out.println("isValidMove:else: " + from.getPiece().getCard().toString());
 				fromCard = from.getPiece().getCard();
 				//System.out.println("2isValidMove:else: " + fromCard.toString());
 			}
 		}
-		else
-			System.out.println("isValidMove:from is null");
-		Position to = move.getToPosition();
+//		else
+//			System.out.println("isValidMove:from is null");
+		if (to.isWaste()) return false;
 		// check from card is a K and to is empty tab
 		if (from != null && from.getPiece() != null
 				&& fromCard.rank != 13

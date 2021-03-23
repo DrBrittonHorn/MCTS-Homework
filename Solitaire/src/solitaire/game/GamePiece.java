@@ -47,4 +47,30 @@ public class GamePiece {
 	{
 		this.card = card;
 	}
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o == this) { 
+            return true; 
+        } 
+  
+        if (!(o instanceof GamePiece)) { 
+            return false; 
+        } 
+          
+        GamePiece p = (GamePiece) o; 
+          
+        return p.flipped == this.flipped &&
+        		p.owner == this.owner &&
+        		p.card.equals(this.card);
+	}
+	
+	@Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + ((flipped) ? 1 : 0);
+        result = 31 * result + owner;
+        result = 31 * result + (card == null ? 0 : card.hashCode());
+        return result;
+    }
 }

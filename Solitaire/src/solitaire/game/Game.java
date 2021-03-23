@@ -141,7 +141,7 @@ public final class Game {
 	
 	protected void advanceGame(Move move)
 	{
-		System.out.println("Advancing Game");
+//		System.out.println("Advancing Game");
 		if (move == null)
 			return;
 		if (gameOver)
@@ -149,6 +149,8 @@ public final class Game {
 		if (!isValidMove(move))
 		{
 			System.out.println("Invalid move attempted: " + move.getFromPosition() + ":::" + move.getToPosition());
+			this.printDeck(deck);
+			this.printBoardText(board);
 			return;
 		}
 		// single click moves are always in toPosition
@@ -346,7 +348,7 @@ public final class Game {
 	
 	private void resetDeck()
 	{
-		System.out.println("resetting deck.");
+//		System.out.println("resetting deck.");
 		for (Card wasteCard : waste)
 		{
 			deck.add(0,wasteCard);
@@ -475,17 +477,17 @@ public final class Game {
 			fromCards.add(found0);
 		}
 		if(foundation1.size()>=1) {
-			Position found1 = new Position(-1, -1, new GamePiece(true, 1, foundation1.get(foundation1.size()-1)), false, false, true, 0);
+			Position found1 = new Position(-1, -1, new GamePiece(true, 1, foundation1.get(foundation1.size()-1)), false, false, true, 1);
 			toCards.add(found1);
 			fromCards.add(found1);
 		}
 		if(foundation2.size()>=1) {
-			Position found2 = new Position(-1, -1, new GamePiece(true, 1, foundation2.get(foundation2.size()-1)), false, false, true, 0);
+			Position found2 = new Position(-1, -1, new GamePiece(true, 1, foundation2.get(foundation2.size()-1)), false, false, true, 2);
 			toCards.add(found2);
 			fromCards.add(found2);
 		}
 		if(foundation3.size()>=1) {
-			Position found3 = new Position(-1, -1, new GamePiece(true, 1, foundation3.get(foundation3.size()-1)), false, false, true, 0);	
+			Position found3 = new Position(-1, -1, new GamePiece(true, 1, foundation3.get(foundation3.size()-1)), false, false, true, 3);	
 			toCards.add(found3);
 			fromCards.add(found3);
 		}
@@ -495,6 +497,7 @@ public final class Game {
 			fromCards.add(lastWaste);
 		}
 		// add top deck card
+//		System.out.println("DECK: " + board.get(deckPos));
 		validMoves.add(new Move(null,board.get(deckPos)));
 		
 		for(int i = 0; i < toCards.size(); i++) {
@@ -597,7 +600,7 @@ public final class Game {
 			return false;
 		}
 		if(from != null && to != null && fromCard!= null) {
-			if(to.getPiece().getCard()!=null) {
+			if(to.getPiece().getCard()!=null && !to.isFoundation()) {
 				Suit fromSuit = fromCard.suit;
 				int fromRank = fromCard.rank;
 				Suit toSuit = to.getPiece().getCard().suit;
@@ -701,6 +704,30 @@ public final class Game {
 			}
 			System.out.println();
 		}
+		System.out.print("F0: ");
+		for (Card c : foundation0)
+		{
+			System.out.print(" |" + c + "| ");
+		}
+		System.out.println();
+		System.out.print("F1: ");
+		for (Card c : foundation1)
+		{
+			System.out.print(" |" + c + "| ");
+		}
+		System.out.println();
+		System.out.print("F2: ");
+		for (Card c : foundation2)
+		{
+			System.out.print(" |" + c + "| ");
+		}
+		System.out.println();
+		System.out.print("F3: ");
+		for (Card c : foundation3)
+		{
+			System.out.print(" |" + c + "| ");
+		}
+		System.out.println();
 	}
 	
 	public void printDeck(List<Card> deck)
@@ -719,7 +746,9 @@ public final class Game {
 		
 		for (Position origP : origBoard)
 		{
-			newBoard.add(new Position(origP.getX(), origP.getY(), new GamePiece(origP.getPiece().isFlipped(), origP.getPiece().getOwner(), origP.getPiece().getCard())));
+			newBoard.add(new Position(origP.getX(), origP.getY(), new GamePiece(origP.getPiece().isFlipped(), origP.getPiece().getOwner(), origP.getPiece().getCard()),
+					origP.isDeck(), origP.isWaste(), origP.isFoundation(), origP.getFoundationNum()
+					));
 		}
 		
 		return newBoard;

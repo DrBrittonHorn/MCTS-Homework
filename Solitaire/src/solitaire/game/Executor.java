@@ -13,13 +13,14 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor {
-	private long runTime = 1000;
+	private long runTime = 5000;
 	private long timeBuffer = 1000;
 	
 	public static void main(String[] args) {
 		Executor exec = new Executor();
-		exec.runGame(new Human());
+//		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
+		exec.runGame(new MCTSSolution());
 //		exec.testGame();
 	}
 	

@@ -182,14 +182,17 @@ public class MCTSSolution extends Agent {
 		{
 			Node newChild = new Node();
 			newChild.moveToGetHere = p;
+			System.out.println("MOVE TO GET HERE: " + newChild.moveToGetHere.getFromPosition() + " -> " + newChild.moveToGetHere.getToPosition());
 			// negate the turn from the parent
-			newChild.turn = node.turn * -1;
+			//newChild.turn = node.turn * -1;
+			newChild.turn = node.turn;
 			newChild.parent = node;
+			newChild.depth = node.depth + 1;
 			// get child's board state by simulating the valid move from current board state
 			newChild.boardState = node.boardState.simulateMove(node.boardState.board, newChild.moveToGetHere);
 			
 			// check if terminal node
-			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty())
+			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty() || newChild.depth >= 100)
 			{
 				newChild.isTerminal = true;
 				newChild.isVisited = false;
@@ -262,6 +265,7 @@ public class MCTSSolution extends Agent {
 		public boolean isTerminal;
 		public int winner;
 		public Move moveToGetHere;
+		public int depth;
 		
 		Node()
 		{

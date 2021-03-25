@@ -102,7 +102,8 @@ public class Position {
 	@Override
 	public String toString()
 	{
-		return "[isDeck: " + deck + 
+		return 	"[(x,y): (" + x + "," + y + ")" + 
+				", isDeck: " + deck + 
 				", iswaste: " + waste +
 				", isFoundation: " + foundation +  
 				", foundationNum: " + foundationNum + 
@@ -128,7 +129,7 @@ public class Position {
         p.foundation == this.foundation &&
         p.waste == this.waste &&
         p.deck == this.deck &&
-        p.p == this.p;
+        p.p.equals(this.p);
 	}
 	
 	@Override

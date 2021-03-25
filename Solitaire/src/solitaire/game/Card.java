@@ -54,7 +54,7 @@ public class Card {
           
         Card c = (Card) o; 
           
-        return c.suit == this.suit && c.rank == this.rank;
+        return c.suit.equals(this.suit) && c.rank == this.rank;
 	}
 	
 	@Override

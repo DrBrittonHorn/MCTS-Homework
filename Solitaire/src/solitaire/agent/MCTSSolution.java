@@ -13,27 +13,47 @@ import solitaire.game.Position;
 
 public class MCTSSolution extends Agent {
 	private Game game = null;
-	Random rand = new Random();
+	private static final Random rand = new Random();
+	Node root = null;
 
 	@Override
 	public Move getMove(Game game, long timeLimit) 
 	{
 		// initialize class variables and create root node (passed in game state)
 		this.game = game;
-		Node root = new Node();
-		root.boardState = this.game.clone();
-		root.turn = this.game.getTurn();
+		if (root == null)
+		{
+			root = new Node();
+			root.boardState = game.clone();
+			root.turn = game.getTurn();
+		}
+		root.depth = 0;
+		//List<Move> valid = game.getValidMoves(game.board, game.turn);
+		//if (valid.size() == 1) return valid.get(0);
 		
 		// here's where the magic happens
 		performMCTS(root, timeLimit);
 		
 		// choose the child with the best win percentage
-		return bestChildWinPct(root);
+		Node ret = bestChildWinPct(root);
+		root = ret;
+		root.parent = null;
+		for (Node n : root.children)
+		{
+			if (!n.equals(ret))
+			{
+				n.deleteChildren();
+				n = null;
+			}
+		}
+		return ret.moveToGetHere;
 	}
 	
 	private void performMCTS(Node root, long timeLimit)
 	{
-		System.out.println("starting MCTS");
+		System.out.println("starting MCTS -- original board:******");
+		root.boardState.printGame();
+		System.out.println("**************************************");
 		
 		// some time formatting so see how long the algorithm takes
 		DateFormat format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS"); 
@@ -48,19 +68,24 @@ public class MCTSSolution extends Agent {
 		Node node = root;
 		int iterationCount = 0;
 		// stop in timeDue milliseconds or after 10 million iterations
-		while (System.currentTimeMillis() < timeDue && iterationCount++ < 10000000)
+		while (System.currentTimeMillis() < timeDue && iterationCount++ < 100000)
 		{
+			//System.out.println("Starting loop");
 			// select node to play from
 			node = selection(root);
+			//System.out.println("after selection");
 			// simulate play and get game result
 			int rolloutResult = rollout(node);
+			//System.out.println("after rollout");
 			// propagate 
 			backpropagate(node, rolloutResult);
+			//System.out.println("after backpropagate");
 			
 			// check if selected node is fully expanded now
 			// if it is, checkNodeExpansion will set isExpanded for us
 			if (node.parent != null && !node.parent.isExpanded)
 			{
+				//System.out.println("checking node expansion");
 				checkNodeExpansion(node.parent);
 			}
 		}
@@ -137,26 +162,41 @@ public class MCTSSolution extends Agent {
 		List<Move> validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		
 		// continue getting the next board until we reach a terminal state
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty())
+		int i = 0;
+		//System.out.println("Rolling out");
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && i <= 200)
 		{
+			i++;
+			//if ((i % 100) == 0)
+			//	System.out.println("another rollout level: " + i);
 			int randInt = rand.nextInt(validMoves.size());
 			// simulate move with random validMove choice
-			rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, validMoves.get(randInt));
+			try {
+				rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, validMoves.get(randInt));
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				rolloutBoard.printGame();
+				System.out.println(validMoves.get(randInt).toString());
+				System.exit(1);
+			}
 			// switch player turns
 			//turn *= -1;
 			// set validMoves for next loop iteration
 			validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
+			//if (i == 500) System.out.println("Reached max playout length!");
 		}
 
 		// return the game result
-		return rolloutBoard.isWinningBoard(rolloutBoard.board);
+		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
 	
 	private void backpropagate(Node node, int result)
 	{
-		// need to negate this for back propagation
+		// need to negate this for back propagation -- not for solitaire
 		// turn is for the NEXT move, not who's move it was INTO this game state
-		result *= -1;
+		//result *= -1;
 		Node tmp = node;
 		// update all parent nodes
 		while (tmp != null)
@@ -164,12 +204,12 @@ public class MCTSSolution extends Agent {
 			// regardless of winner, add simulation
 			tmp.simulations++;
 			// if turn for this node wins, add a win
-			if (result == tmp.turn)
-				tmp.wins++;
+			//if (result == tmp.turn)
+			tmp.score += result;
 			// if no one wins, add half a win
 			// this differentiates between draws and losses
-			if (result == 0)
-				tmp.wins += .5;
+			// if (result == 0)
+			//	tmp.wins += .5;
 			tmp = tmp.parent;
 		}
 	}
@@ -177,12 +217,13 @@ public class MCTSSolution extends Agent {
 	private void addChildren(Node node)
 	{
 		List<Move> validMoves = node.boardState.getValidMoves(node.boardState.board, node.turn);
+		//System.out.println("Adding children");
 		// create children for each valid move
 		for (Move p : validMoves)
 		{
 			Node newChild = new Node();
 			newChild.moveToGetHere = p;
-			System.out.println("MOVE TO GET HERE: " + newChild.moveToGetHere.getFromPosition() + " -> " + newChild.moveToGetHere.getToPosition());
+			//System.out.println("MOVE TO GET HERE: " + newChild.moveToGetHere.getFromPosition() + " -> " + newChild.moveToGetHere.getToPosition());
 			// negate the turn from the parent
 			//newChild.turn = node.turn * -1;
 			newChild.turn = node.turn;
@@ -197,6 +238,7 @@ public class MCTSSolution extends Agent {
 				newChild.isTerminal = true;
 				newChild.isVisited = false;
 				newChild.isExpanded = false;
+				newChild.score = newChild.boardState.getBoardScore(newChild.boardState.board);
 			}
 			
 			// add child to parent's list
@@ -204,26 +246,26 @@ public class MCTSSolution extends Agent {
 		}
 	}
 	
-	private Move bestChildWinPct(Node parent)
+	private Node bestChildWinPct(Node parent)
 	{
 		// go through all children and print win percentages, return the one with the highest
 		// draws == .5 wins lets us choose drawing moves more than losing moves we can't win
 		System.out.println(":::::::::::::::Win Percentages:::::::::::");
-		double bestWinPct = -1;
+		double bestAvgScore = -1;
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			child.printNode();
-			double childWinPct = (child.simulations == 0) ? 0.0 : (childWinPct = child.wins / (double) child.simulations);
-			if (childWinPct > bestWinPct)
+			//child.printNode();
+			double childAvgScore = (child.simulations == 0) ? 0.0 : (childAvgScore = child.score / (double) child.simulations);
+			if (childAvgScore > bestAvgScore)
 			{
-				bestWinPct = childWinPct;
+				bestAvgScore = childAvgScore;
 				bestChild = child;
 			}
 		}
 		
 		// return the move with highest win percentage
-		return bestChild.moveToGetHere;
+		return bestChild;
 	}
 	
 	private void checkNodeExpansion(Node node)
@@ -259,7 +301,7 @@ public class MCTSSolution extends Agent {
 		public Node parent;
 		public List<Node> children;
 		public int simulations;
-		public double wins;
+		public double score;
 		public Game boardState = null;
 		public int turn;
 		public boolean isTerminal;
@@ -274,7 +316,7 @@ public class MCTSSolution extends Agent {
 			this.isTerminal = false;
 			this.parent = null;
 			this.simulations = 0;
-			this.wins = 0;
+			this.score = 0;
 			this.children = new ArrayList<Node>();
 		}
 		
@@ -310,7 +352,7 @@ public class MCTSSolution extends Agent {
 				return Double.MAX_VALUE;
 			// calculate uct
 			// uct = (w_i / s_i) + (C * sqrt(log(S)/s_i))
-			return (this.wins / (double) this.simulations) + 
+			return (this.score / (double) this.simulations) + 
 					(1.41 * Math.sqrt(
 							Math.log(this.parent.simulations) / (double) this.simulations)
 							);
@@ -322,12 +364,21 @@ public class MCTSSolution extends Agent {
 		public void printNode()
 		{
 			System.out.println("===== Node Begin =====");
-			boardState.printBoardText(boardState.board);
-			System.out.println("wins: " + this.wins + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", turn: " + this.turn + 
+			boardState.printGame();
+			System.out.println("score: " + this.score + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", turn: " + this.turn + 
 					", isTerminal: " + this.isTerminal + ", winner: " + this.winner + 
-					", moveToGetHere: " + ((this.moveToGetHere != null) ? this.moveToGetHere.getToPosition().getPiece().getOwner() + "@" + this.moveToGetHere.getToPosition().getX() + "," + this.moveToGetHere.getToPosition().getY() 
+					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
 					: "null"));
 			System.out.println("===== Node End =====");
+		}
+		
+		public void deleteChildren()
+		{
+			for (Node child : children)
+			{
+				child.deleteChildren();
+			}
+			return;
 		}
 	}
 

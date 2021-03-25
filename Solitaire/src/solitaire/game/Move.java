@@ -28,6 +28,15 @@ public class Move
 		return toPosition;
 	}
 	
+	public String toString()
+	{
+		if (fromPosition == null && toPosition == null)
+			return "null -> null";
+		if(fromPosition == null)
+			return "null -> " + toPosition;
+		return fromPosition + " -> " + toPosition;
+	}
+	
 	@Override
 	public boolean equals(Object o)
 	{

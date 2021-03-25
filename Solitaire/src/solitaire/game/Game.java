@@ -12,19 +12,19 @@ import solitaire.agent.Agent;
 import solitaire.agent.Human;
 
 public final class Game {
-	Random rand = new Random();
+	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, maxPlays = 200;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
-	public List<Card> deck = new ArrayList<Card>();
+	public List<Card> deck = new ArrayList<Card>(24);
 	// flipped cards
-	public List<Card> waste = new ArrayList<Card>();
+	public List<Card> waste = new ArrayList<Card>(24);
 	// cards placed at top. Goes from Ace to K for each suit
-	public List<Card> foundation2 = new ArrayList<Card>();
-	public List<Card> foundation0 = new ArrayList<Card>();
-	public List<Card> foundation3 = new ArrayList<Card>();
-	public List<Card> foundation1 = new ArrayList<Card>();
+	public List<Card> foundation2 = new ArrayList<Card>(13);
+	public List<Card> foundation0 = new ArrayList<Card>(13);
+	public List<Card> foundation3 = new ArrayList<Card>(13);
+	public List<Card> foundation1 = new ArrayList<Card>(13);
 	// the board cards
 //	public List<Card> tab0 = new ArrayList<Card>();
 //	public List<Card> tab1 = new ArrayList<Card>();
@@ -35,7 +35,7 @@ public final class Game {
 //	public List<Card> tab6 = new ArrayList<Card>();
 	private boolean gameOver;
 	public boolean isSingleFlip = false;
-	private int lastFlipCount;
+	private int lastFlipCount, playsMade;
 	private GamePiece nullPiece = new GamePiece(false,0, null);
 	
 	public Game() {
@@ -146,6 +146,11 @@ public final class Game {
 			return;
 		if (gameOver)
 			return;
+		if (playsMade++ >= maxPlays)
+		{
+			gameOver = true;
+			return;
+		}
 		if (!isValidMove(move))
 		{
 			System.out.println("Invalid move attempted: " + move.getFromPosition() + ":::" + move.getToPosition());
@@ -273,10 +278,15 @@ public final class Game {
 				return;
 			}
 			GamePiece oldPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).getPiece();
-			board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
+			
 			// move to foundation
 			if (move.getToPosition().isFoundation())
 			{
+				if(!oldPiece.getCard().equals(getLastFlippedCardInTab(fromPosition.getX()).getPiece().getCard()))
+				{
+					System.out.println("Attempted to move an unclear card.");
+					return;
+				}
 				// need to add check that card is free
 				int foundationNum = move.getToPosition().getFoundationNum();
 				switch (foundationNum) {
@@ -296,9 +306,12 @@ public final class Game {
 						System.out.println("Bad foundation number!");
 						return;
 				}
+				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
+				return;
 			}
 			else if (move.getToPosition().getX() >= 0)
 			{
+				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
 				int tmpItr = 0;
 				// move to another tab
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
@@ -413,6 +426,11 @@ public final class Game {
 		} else return 0;
 	}
 	
+	public int getBoardScore(List<Position> origBoard)
+	{
+		return foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size();
+	}
+	
 	public boolean gameOver()
 	{
 		return this.gameOver;
@@ -510,7 +528,7 @@ public final class Game {
 				Suit toSuit = toPos.getPiece().getCard().suit;
 				if(!(fromRank == toRank && fromSuit == toSuit)) {
 					if(toPos.isFoundation()) {
-						if(fromSuit == toSuit && fromRank - toRank == 1) {
+						if(fromSuit == toSuit && fromRank - toRank == 1 && (fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX())))) {
 							validMoves.add(new Move(fromPos, toPos));
 						}
 					} else if(fromRank == 1 && !fromPos.isFoundation()) {
@@ -617,6 +635,9 @@ public final class Game {
 					}
 				}
 			} else if(to.isFoundation()) {
+				// check if from card is free
+				if (from.getX() >= 0 && !getLastFlippedCardInTab(from.getX()).equals(from))
+					return false;
 				Card toCard = null;
 				switch (to.getFoundationNum()) {
 				case 0:
@@ -738,6 +759,23 @@ public final class Game {
 			System.out.println(c.toString());
 		}
 		System.out.println(" ===== END DECK ======");
+	}
+	
+	public void printWaste(List<Card> waste)
+	{
+		System.out.println(" ===== BEGIN WASTE ======");
+		for (Card c : waste)
+		{
+			System.out.println(c.toString());
+		}
+		System.out.println(" ===== END WASTE ======");
+	}
+	
+	public void printGame()
+	{
+		printBoardText(board);
+		printDeck(deck);
+		
 	}
 	
 	public List<Position> copyBoard(List<Position> origBoard)

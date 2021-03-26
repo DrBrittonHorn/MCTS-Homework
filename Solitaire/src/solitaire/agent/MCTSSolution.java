@@ -28,7 +28,13 @@ public class MCTSSolution extends Agent {
 			root.turn = game.getTurn();
 		}
 		root.depth = 0;
-		//List<Move> valid = game.getValidMoves(game.board, game.turn);
+		
+		System.out.println("starting MCTS -- original board:******");
+		root.boardState.printGame();
+		System.out.println("**************************************");
+		List<Move> valid = game.getValidMoves(game.board, game.turn);
+		for (Move m : valid)
+			System.out.println(m.toString());
 		//if (valid.size() == 1) return valid.get(0);
 		
 		// here's where the magic happens
@@ -52,9 +58,6 @@ public class MCTSSolution extends Agent {
 	
 	private void performMCTS(Node root, long timeLimit)
 	{
-		System.out.println("starting MCTS -- original board:******");
-		root.boardState.printGame();
-		System.out.println("**************************************");
 		
 		// some time formatting so see how long the algorithm takes
 		DateFormat format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS"); 
@@ -69,7 +72,7 @@ public class MCTSSolution extends Agent {
 		Node node = root;
 		int iterationCount = 0;
 		// stop in timeDue milliseconds or after 10 million iterations
-		while (System.currentTimeMillis() < timeDue && iterationCount++ < 100000)
+		while (System.currentTimeMillis() < timeDue && iterationCount++ < 1000000)
 		{
 			//System.out.println("Starting loop");
 			// select node to play from
@@ -165,7 +168,7 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("Rolling out");
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && i+rolloutBoard.playsMade <= rolloutBoard.maxPlays)
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays)
 		{
 			i++;
 			//if ((i % 100) == 0)
@@ -190,6 +193,9 @@ public class MCTSSolution extends Agent {
 		}
 
 		// return the game result
+		System.out.println(rolloutBoard.getBoardScore(rolloutBoard.board));
+		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		//rolloutBoard.printGame();
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
 	
@@ -252,13 +258,13 @@ public class MCTSSolution extends Agent {
 	{
 		// go through all children and print win percentages, return the one with the highest
 		// draws == .5 wins lets us choose drawing moves more than losing moves we can't win
-		System.out.println(":::::::::::::::Win Percentages:::::::::::");
+		//System.out.println(":::::::::::::::Win Percentages:::::::::::");
 		double bestAvgScore = -1;
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
 			//child.printNode();
-			double childAvgScore = (child.simulations == 0) ? 0.0 : (childAvgScore = child.score / (double) child.simulations);
+			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore)
 			{
 				bestAvgScore = childAvgScore;

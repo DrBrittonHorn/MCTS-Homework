@@ -13,7 +13,7 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor {
-	private long runTime = 2000;
+	private long runTime = 4000;
 	private long timeBuffer = 1000;
 	
 	public static void main(String[] args) {
@@ -81,7 +81,12 @@ public class Executor {
 	        }
 
 		});
-		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		long start = System.currentTimeMillis();
 		
 		while (!game.gameOver())

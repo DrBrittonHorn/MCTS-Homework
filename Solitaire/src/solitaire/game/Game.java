@@ -33,6 +33,7 @@ public final class Game {
 //	public List<Card> tab4 = new ArrayList<Card>();
 //	public List<Card> tab5 = new ArrayList<Card>();
 //	public List<Card> tab6 = new ArrayList<Card>();
+	private int timesDeckFlipped = 0;
 	private boolean gameOver;
 	public boolean isSingleFlip = false;
 	private int lastFlipCount, playsMade;
@@ -146,7 +147,7 @@ public final class Game {
 			return;
 		if (gameOver)
 			return;
-		if (playsMade++ >= maxPlays)
+		if (playsMade++ >= maxPlays || timesDeckFlipped > 2)
 		{
 			gameOver = true;
 			return;
@@ -368,6 +369,7 @@ public final class Game {
 		}
 		waste = new ArrayList<Card>();
 		lastFlipCount = 0;
+		timesDeckFlipped++;
 	}
 	
 	private void flipDeck()

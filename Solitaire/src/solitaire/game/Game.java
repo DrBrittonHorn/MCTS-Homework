@@ -14,7 +14,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, maxPlays = 200;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 200, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -35,7 +35,7 @@ public final class Game {
 //	public List<Card> tab6 = new ArrayList<Card>();
 	private boolean gameOver;
 	public boolean isSingleFlip = false;
-	private int lastFlipCount, playsMade;
+	private int lastFlipCount;
 	private GamePiece nullPiece = new GamePiece(false,0, null);
 	
 	public Game() {
@@ -163,6 +163,11 @@ public final class Game {
 		{
 			if (move.getToPosition().isDeck())
 			{
+				if (deckFlips >= maxDeckFlips && deck.size() == 0)
+				{
+					System.out.println("Max deck flips reached");
+					return;
+				}
 				if (deck.size() > 0)
 					flipDeck();
 				else
@@ -346,7 +351,7 @@ public final class Game {
 				}
 			}
 		}
-		if(isWinningBoard(board) == 1) {
+		if(isWinningBoard(board) != 0) {
 			gameOver = true;
 		}
 		return;
@@ -368,6 +373,7 @@ public final class Game {
 		}
 		waste = new ArrayList<Card>();
 		lastFlipCount = 0;
+		deckFlips++;
 	}
 	
 	private void flipDeck()
@@ -421,18 +427,25 @@ public final class Game {
 	public int isWinningBoard(List<Position> origBoard)
 	{
 		if(foundation0.size() == 13  && foundation1.size()== 13 &&
-				foundation2.size() == 13 && foundation3.size() == 13) {
+				foundation2.size() == 13 && foundation3.size() == 13) 
 			return 1;
-		} else return 0;
+		//else if(deckFlips >= 3)
+		//	return -1;
+		return 0;
 	}
 	
-	public int getBoardScore(List<Position> origBoard)
+	public float getBoardScore(List<Position> origBoard)
 	{
-		return foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size();
+		return foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size() + (.1f*(maxPlays-playsMade));
 	}
 	
 	public boolean gameOver()
 	{
+		if (getValidMoves(board, turn).size() == 0)
+		{
+			System.out.println("No moves left.");
+			return true;
+		}
 		return this.gameOver;
 	}
 	
@@ -516,7 +529,8 @@ public final class Game {
 		}
 		// add top deck card
 //		System.out.println("DECK: " + board.get(deckPos));
-		validMoves.add(new Move(null,board.get(deckPos)));
+		if (deckFlips < maxDeckFlips || deck.size() > 0)
+			validMoves.add(new Move(null,board.get(deckPos)));
 		
 		for(int i = 0; i < toCards.size(); i++) {
 			for(int j = 0; j < fromCards.size(); j++) {
@@ -571,6 +585,8 @@ public final class Game {
 		
 		Position from = move.getFromPosition();
 		Position to = move.getToPosition();
+		if (from == null && to.isDeck() && (deckFlips >= maxDeckFlips && deck.size() == 0))
+			return false;
 		Card fromCard = null;
 		if (from != null && from.getPiece() != null)
 		{

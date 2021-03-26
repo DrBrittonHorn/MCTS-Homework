@@ -180,6 +180,7 @@ public final class GameView extends JComponent
 		bufferGraphics.fillRect(0, 0, width, height);
 		// outlines
 		bufferGraphics.setColor(Color.WHITE);
+		bufferGraphics.drawString("Moves left: " + (game.maxPlays-game.playsMade) + ", Deck turn: " + game.deckFlips, 0, 10);
 		// outline deck and discard
 		deckX = bufferW;
 		deckY = bufferH;

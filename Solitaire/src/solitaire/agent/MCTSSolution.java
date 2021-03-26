@@ -36,6 +36,7 @@ public class MCTSSolution extends Agent {
 		
 		// choose the child with the best win percentage
 		Node ret = bestChildWinPct(root);
+		if (ret == null) return null;
 		root = ret;
 		root.parent = null;
 		for (Node n : root.children)
@@ -75,7 +76,7 @@ public class MCTSSolution extends Agent {
 			node = selection(root);
 			//System.out.println("after selection");
 			// simulate play and get game result
-			int rolloutResult = rollout(node);
+			double rolloutResult = rollout(node);
 			//System.out.println("after rollout");
 			// propagate 
 			backpropagate(node, rolloutResult);
@@ -148,7 +149,7 @@ public class MCTSSolution extends Agent {
 		return null;
 	}
 	
-	private int rollout(Node leaf)
+	private double rollout(Node leaf)
 	{
 		// simulating playouts to the end of the game with random moves
 		
@@ -164,7 +165,7 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("Rolling out");
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && i <= 200)
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && i+rolloutBoard.playsMade <= rolloutBoard.maxPlays)
 		{
 			i++;
 			//if ((i % 100) == 0)
@@ -192,7 +193,7 @@ public class MCTSSolution extends Agent {
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
 	
-	private void backpropagate(Node node, int result)
+	private void backpropagate(Node node, double result)
 	{
 		// need to negate this for back propagation -- not for solitaire
 		// turn is for the NEXT move, not who's move it was INTO this game state
@@ -233,7 +234,8 @@ public class MCTSSolution extends Agent {
 			newChild.boardState = node.boardState.simulateMove(node.boardState.board, newChild.moveToGetHere);
 			
 			// check if terminal node
-			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty() || newChild.depth >= 100)
+			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || 
+					newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty())
 			{
 				newChild.isTerminal = true;
 				newChild.isVisited = false;

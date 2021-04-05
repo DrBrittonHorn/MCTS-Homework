@@ -144,6 +144,8 @@ public final class Game {
 	public List<Position> getValidMoves(List<Position> origBoard, int turn)
 	{
 		ArrayList<Position> validMoves = new ArrayList<Position>();
+		if (isWinningBoard(origBoard) != 0)
+			return validMoves;
 		
 		for(int xCell = 0; xCell < boardWidth; xCell++)
 		{

@@ -43,7 +43,6 @@ public class MCTSSolution extends Agent {
 		// choose the child with the best win percentage
 		Node ret = bestChildWinPct(root);
 		if (ret == null) return null;
-		root = ret;
 		root.parent = null;
 		for (Node n : root.children)
 		{
@@ -53,6 +52,8 @@ public class MCTSSolution extends Agent {
 				n = null;
 			}
 		}
+		root = ret;
+		
 		return ret.moveToGetHere;
 	}
 	
@@ -79,7 +80,8 @@ public class MCTSSolution extends Agent {
 			node = selection(root);
 			//System.out.println("after selection");
 			// simulate play and get game result
-			double rolloutResult = rollout(node);
+			//double rolloutResult = rollout(node);
+			double rolloutResult = greedyRollout(node);
 			//System.out.println("after rollout");
 			// propagate 
 			backpropagate(node, rolloutResult);
@@ -94,7 +96,7 @@ public class MCTSSolution extends Agent {
 			}
 		}
 		// more time logging
-		System.out.println("iteration count: " + iterationCount);
+		System.out.println("iteration count: " + (iterationCount-1));
 		long endTime = System.currentTimeMillis();
         Date endDate = new Date(endTime); 
 		System.out.println("time end: " + format.format(endDate));
@@ -152,6 +154,77 @@ public class MCTSSolution extends Agent {
 		return null;
 	}
 	
+	private double greedyRollout(Node leaf)
+	{
+		// mark this node as visited in case we haven't done it before
+		leaf.isVisited = true;
+		// set the node's turn
+		int turn = leaf.turn;
+		// copy board so we don't mess any future nodes up
+		Game rolloutBoard = leaf.boardState.clone();
+		// get possible next moves
+		List<Move> validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
+		
+		// continue getting the next board until we reach a terminal state
+		int i = 0;
+		//System.out.println("%%%%%%%%%%%%%%%% Rolling out %%%%%%%%%%%%%%%%%%%");
+		rolloutBoard.printGame();
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i < 50)
+		{
+			List<Move> bestMoves = new ArrayList<Move>(); // what about equal best moves? Need to pick at random I think.
+			double bestScore = -1;
+			double s = -1;
+			for (Move m : validMoves)
+			{
+				try
+				{
+					s = getInterimScore(rolloutBoard.simulateMove(rolloutBoard.board, m));
+					//System.out.println("Move: " + m);
+					//System.out.println("Int Score: " + s);
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+					rolloutBoard.printGame();
+					System.out.println(m);
+					System.exit(1);
+				}
+				if (s == bestScore)
+				{
+					bestMoves.add(m);
+				}
+				if (s > bestScore)
+				{
+					bestScore = s;
+					bestMoves.clear();
+					bestMoves.add(m);
+				}
+			}
+			int randInt = rand.nextInt(bestMoves.size());
+			rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, bestMoves.get(randInt));
+			rolloutBoard.printGame();
+			validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
+		}
+		//System.out.println("%%%%%%%%%%%%%%%% ROLL DONE %%%%%%%%%%%%%%%%%%%");
+		return rolloutBoard.getBoardScore(rolloutBoard.board);
+	}
+	
+	private double getInterimScore(Game g)
+	{
+		double score = 0.0;
+		for (Position p : g.board) // get flipped cards
+		{
+			if (p.getPiece() != null && p.getPiece().isFlipped())
+				score += .5;
+		}
+		int f0 = g.foundation0.size();
+		int f1 = g.foundation1.size();
+		int f2 = g.foundation2.size();
+		int f3 = g.foundation3.size();
+		
+		return score + 10*(f0+f1+f2+f3);
+	}
+	
 	private double rollout(Node leaf)
 	{
 		// simulating playouts to the end of the game with random moves
@@ -168,7 +241,7 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("Rolling out");
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays)
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i < 50)
 		{
 			i++;
 			//if ((i % 100) == 0)
@@ -193,8 +266,8 @@ public class MCTSSolution extends Agent {
 		}
 
 		// return the game result
-		System.out.println(rolloutBoard.getBoardScore(rolloutBoard.board));
-		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		//System.out.println(rolloutBoard.getBoardScore(rolloutBoard.board));
+		//System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
 		//rolloutBoard.printGame();
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
@@ -263,7 +336,7 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			//child.printNode();
+			child.printNode();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore)
 			{
@@ -361,7 +434,7 @@ public class MCTSSolution extends Agent {
 			// calculate uct
 			// uct = (w_i / s_i) + (C * sqrt(log(S)/s_i))
 			return (this.score / (double) this.simulations) + 
-					(1.41 * Math.sqrt(
+					(2 * Math.sqrt(
 							Math.log(this.parent.simulations) / (double) this.simulations)
 							);
 		}

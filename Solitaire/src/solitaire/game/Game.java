@@ -469,16 +469,18 @@ public final class Game {
 	
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
-		Set<Move> validMoves = new HashSet<Move>();
-		ArrayList<Position> toCards = new ArrayList<Position>();
-		ArrayList<Position> fromCards = new ArrayList<Position>();
+		List<Move> validMoves = new ArrayList<Move>();
+		Set<Position> toCards = new HashSet<Position>();
+		Set<Position> fromCards = new HashSet<Position>();
 		//Add tabular cards
 		for(int i = 0; i < 7; i++) {
-			if(getLastFlippedCardInTab(i)!= null) {
-				toCards.add(getLastFlippedCardInTab(i));
-				fromCards.add(getLastFlippedCardInTab(i));
-				int j = getLastFlippedCardInTab(i).getY()-1;
-				Position prev = getLastFlippedCardInTab(i);
+			Position lastFlipped = getLastFlippedCardInTab(i);
+			Position lastUnflipped = getLastUnflippedCardInTab(i);
+			if(lastFlipped!= null) {
+				toCards.add(lastFlipped);
+				fromCards.add(lastFlipped);
+				int j = lastFlipped.getY()-1;
+				Position prev = lastFlipped;
 				while(j>=0 && board.get(i*boardHeight +j).getPiece().isFlipped()) {
 					int prevRank = prev.getPiece().getCard().rank;
 					Suit prevSuit = prev.getPiece().getCard().suit;
@@ -500,31 +502,39 @@ public final class Game {
 					prev = board.get(i*boardHeight + j);
 					j = j-1;
 				}
-			} else if(getLastUnflippedCardInTab(i) != null) {
-				validMoves.add(new Move(null, getLastUnflippedCardInTab(i)));
+			} else if(lastUnflipped != null) {
+				validMoves.add(new Move(null, lastUnflipped));
 			}
 		}
 		//Add foundation cards
 		if(foundation0.size()>= 1) {
 			Position found0 = new Position(-1, -1, new GamePiece(true, 1, foundation0.get(foundation0.size()-1)), false, false, true, 0);			
-			toCards.add(found0);
+			//toCards.add(found0);
 			fromCards.add(found0);
 		}
+		if (foundation0.size() < 13)
+			toCards.add(board.get(f0Pos));
 		if(foundation1.size()>=1) {
 			Position found1 = new Position(-1, -1, new GamePiece(true, 1, foundation1.get(foundation1.size()-1)), false, false, true, 1);
-			toCards.add(found1);
+			//toCards.add(found1);
 			fromCards.add(found1);
 		}
+		if (foundation1.size() < 13)
+			toCards.add(board.get(f1Pos));
 		if(foundation2.size()>=1) {
 			Position found2 = new Position(-1, -1, new GamePiece(true, 1, foundation2.get(foundation2.size()-1)), false, false, true, 2);
-			toCards.add(found2);
+			//toCards.add(found2);
 			fromCards.add(found2);
 		}
+		if (foundation2.size() < 13)
+			toCards.add(board.get(f2Pos));
 		if(foundation3.size()>=1) {
 			Position found3 = new Position(-1, -1, new GamePiece(true, 1, foundation3.get(foundation3.size()-1)), false, false, true, 3);	
-			toCards.add(found3);
+			//toCards.add(found3);
 			fromCards.add(found3);
 		}
+		if (foundation3.size() < 13)
+			toCards.add(board.get(f3Pos));
 		// add waste cards
 		if(waste.size()>=1) {
 			Position lastWaste = new Position(-1, -1, new GamePiece(true, 1, waste.get(waste.size()-1)),false, true, false, -1);
@@ -540,52 +550,59 @@ public final class Game {
 			validMoves.add(new Move(null,board.get(deckPos)));
 		}
 		
-		for(int i = 0; i < toCards.size(); i++) {
-			for(int j = 0; j < fromCards.size(); j++) {
-				Position fromPos = fromCards.get(j);
-				Position toPos = toCards.get(i);
+		for(Position toPos : toCards) {
+			//System.out.println("to POS: " + toPos);
+			for(Position fromPos : fromCards) {
+				if (fromPos.equals(toPos)) continue;
+				//System.out.println("from POS: " + fromPos);
 				int fromRank = fromPos.getPiece().getCard().rank;
 				Suit fromSuit = fromPos.getPiece().getCard().suit;
-				int toRank = toPos.getPiece().getCard().rank;
-				Suit toSuit = toPos.getPiece().getCard().suit;
-				if(!(fromRank == toRank && fromSuit == toSuit)) {
-					if(toPos.isFoundation()) {
-						if(fromSuit == toSuit && fromRank - toRank == 1 && (fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX())))) {
-							validMoves.add(new Move(fromPos, toPos));
-						}
-					} else if(fromRank == 1 && !fromPos.isFoundation()) {
-						if(foundation0.size() == 0) {
+				if(toPos.isFoundation()) {
+					if(fromRank == 1 && !fromPos.isFoundation()) {
+						if(foundation0.size() == 0 && toPos.getFoundationNum() == 0) {
 							validMoves.add(new Move(fromPos, board.get(f0Pos)));
-						} else if(foundation1.size() == 0) {
+						} else if(foundation1.size() == 0 && toPos.getFoundationNum() == 1) {
 							validMoves.add(new Move(fromPos, board.get(f1Pos)));
-						} else if(foundation2.size() == 0) {
+						} else if(foundation2.size() == 0 && toPos.getFoundationNum() == 2) {
 							validMoves.add(new Move(fromPos, board.get(f2Pos)));
-						} else if(foundation3.size() == 0) {
+						} else if(foundation3.size() == 0 && toPos.getFoundationNum() == 3) {
 							validMoves.add(new Move(fromPos, board.get(f3Pos)));
 						} 
-					} else if(toRank - fromRank == 1) {
-						if((fromSuit == Suit.HEART || fromSuit == Suit.DIAMOND) &&
-								(toSuit == Suit.SPADE || toSuit == Suit.CLUB)) {
-							if(fromPos.getX() != toPos.getX()) {
-								validMoves.add(new Move(fromPos, toPos));
-							}
-						} else if ((toSuit == Suit.HEART || toSuit == Suit.DIAMOND) &&
-								(fromSuit == Suit.SPADE || fromSuit == Suit.CLUB)) {
-							if(fromPos.getX() != toPos.getX()) {
-								validMoves.add(new Move(fromPos, toPos));
-							}
+						continue;
+					}
+					if (toPos.getPiece() == null || toPos.getPiece().getCard() == null) continue;
+					int toRank = toPos.getPiece().getCard().rank;
+					Suit toSuit = toPos.getPiece().getCard().suit;
+					if(fromSuit == toSuit && fromRank - toRank == 1 && (fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX())))) {
+						validMoves.add(new Move(fromPos, toPos));
+					}
+					continue;
+				}
+				int toRank = toPos.getPiece().getCard().rank;
+				Suit toSuit = toPos.getPiece().getCard().suit;
+
+				if(toRank - fromRank == 1) {
+					if((fromSuit == Suit.HEART || fromSuit == Suit.DIAMOND) &&
+							(toSuit == Suit.SPADE || toSuit == Suit.CLUB)) {
+						if(fromPos.getX() != toPos.getX()) {
+							validMoves.add(new Move(fromPos, toPos));
 						}
-					} else if(fromRank == 13 ) {
-						for(int tab=0; tab<7; tab++) {
-							if(board.get(tab*boardHeight).getPiece().getCard() == null) {
-								validMoves.add(new Move(fromPos, board.get(tab*boardHeight)));
-							}
+					} else if ((toSuit == Suit.HEART || toSuit == Suit.DIAMOND) &&
+							(fromSuit == Suit.SPADE || fromSuit == Suit.CLUB)) {
+						if(fromPos.getX() != toPos.getX()) {
+							validMoves.add(new Move(fromPos, toPos));
+						}
+					}
+				} else if(fromRank == 13 ) {
+					for(int tab=0; tab<7; tab++) {
+						if(board.get(tab*boardHeight).getPiece().getCard() == null) {
+							validMoves.add(new Move(fromPos, board.get(tab*boardHeight)));
 						}
 					}
 				}
 			}
 		}
-		return validMoves.stream().collect(Collectors.toList());
+		return validMoves;
 	}
 	
 	public boolean isValidMove(Move move)

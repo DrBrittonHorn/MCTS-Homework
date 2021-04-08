@@ -2,9 +2,12 @@ package solitaire.agent;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 import solitaire.game.Game;
@@ -42,6 +45,7 @@ public class MCTSSolution extends Agent {
 		
 		// choose the child with the best win percentage
 		Node ret = bestChildWinPct(root);
+		//printTree(root);
 		if (ret == null) return null;
 		root.parent = null;
 		for (Node n : root.children)
@@ -55,6 +59,31 @@ public class MCTSSolution extends Agent {
 		root = ret;
 		
 		return ret.moveToGetHere;
+	}
+	
+	private void printTree(Node root)
+	{
+		LinkedList<Node> q = new LinkedList<Node>();
+		Node rover = null;
+		int depth = root.depth;
+		q.add(root);
+		while (!q.isEmpty())
+		{
+			rover = q.remove();
+			//rover.printNode();
+			if (rover.depth > depth)
+			{
+				depth = rover.depth;
+				System.out.println("*********************** LEVEL " + depth + " *********************");
+			}
+			System.out.println("move to get here: " + rover.moveToGetHere);
+			for (Node child : rover.children)
+			{
+				if (child.simulations > 0)
+					q.add(child);
+			}
+		}
+		
 	}
 	
 	private void performMCTS(Node root, long timeLimit)
@@ -75,6 +104,10 @@ public class MCTSSolution extends Agent {
 		// stop in timeDue milliseconds or after 10 million iterations
 		while (System.currentTimeMillis() < timeDue && iterationCount++ < 1000000)
 		{
+			/*for (Node child : root.children)
+			{
+				child.printNode();
+			}*/
 			//System.out.println("Starting loop");
 			// select node to play from
 			node = selection(root);
@@ -168,8 +201,8 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("%%%%%%%%%%%%%%%% Rolling out %%%%%%%%%%%%%%%%%%%");
-		rolloutBoard.printGame();
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i < 50)
+		//rolloutBoard.printGame();
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i++ < 50)
 		{
 			List<Move> bestMoves = new ArrayList<Move>(); // what about equal best moves? Need to pick at random I think.
 			double bestScore = -1;
@@ -202,10 +235,14 @@ public class MCTSSolution extends Agent {
 			}
 			int randInt = rand.nextInt(bestMoves.size());
 			rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, bestMoves.get(randInt));
-			rolloutBoard.printGame();
+			//rolloutBoard.printGame();
 			validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		}
 		//System.out.println("%%%%%%%%%%%%%%%% ROLL DONE %%%%%%%%%%%%%%%%%%%");
+		/*System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board));
+		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		rolloutBoard.printGame();
+		System.out.println(" $$$$$$$$$$$$$$$$$$$$$$ END OF ROLLOUT $$$$$$$$$$$$$$$$$$$$$");*/
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
 	
@@ -266,9 +303,10 @@ public class MCTSSolution extends Agent {
 		}
 
 		// return the game result
-		//System.out.println(rolloutBoard.getBoardScore(rolloutBoard.board));
-		//System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
-		//rolloutBoard.printGame();
+		/*System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board));
+		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		rolloutBoard.printGame();
+		System.out.println(" $$$$$$$$$$$$$$$$$$$$$$ END OF ROLLOUT $$$$$$$$$$$$$$$$$$$$$");*/
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
 	}
 	
@@ -314,7 +352,8 @@ public class MCTSSolution extends Agent {
 			
 			// check if terminal node
 			if (newChild.boardState.isWinningBoard(newChild.boardState.board) != 0 || 
-					newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty())
+					newChild.boardState.getValidMoves(newChild.boardState.board, newChild.turn).isEmpty() ||
+					newChild.boardState.maxPlays <= newChild.boardState.playsMade)
 			{
 				newChild.isTerminal = true;
 				newChild.isVisited = false;
@@ -336,7 +375,7 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			child.printNode();
+			//child.printNode();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore)
 			{

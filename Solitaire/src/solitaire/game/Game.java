@@ -14,7 +14,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 200, deckFlips = 0, maxDeckFlips = 20;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 100, deckFlips = 0, maxDeckFlips = 3;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -35,7 +35,7 @@ public final class Game {
 //	public List<Card> tab6 = new ArrayList<Card>();
 //	private int timesDeckFlipped = 0;
 	private boolean gameOver;
-	public boolean isSingleFlip = true;
+	public boolean isSingleFlip = false;
 	private int lastFlipCount;
 	private GamePiece nullPiece = new GamePiece(false,0, null);
 	
@@ -59,6 +59,20 @@ public final class Game {
 		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 2));
 		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 3));
 		
+		setupGame();
+		//setupTestGame();
+		
+		/*
+		// for testing purposes only
+		for (int addCard = 7; addCard < 11; addCard++)
+		{
+			board.get((6 * boardHeight) + addCard).setPiece(new GamePiece(true,1,deck.get(0)));
+			deck.remove(0);
+		}
+		*/
+	}
+	
+	private void setupGame() {
 		// Generate all cards
 		for (Suit s : Suit.values())
 		{
@@ -79,15 +93,76 @@ public final class Game {
 				deck.remove(0);
 			}
 		}
-		
-		/*
-		// for testing purposes only
-		for (int addCard = 7; addCard < 11; addCard++)
+	}
+	
+	private void setupTestGame() 
+	{
+		List<Card> allCards = new ArrayList<Card>();
+		// Generate all cards
+		// spade, diamond, club, heart. Aces at 0 S, 13 D, 26 C, 39 H
+		for (Suit s : Suit.values())
 		{
-			board.get((6 * boardHeight) + addCard).setPiece(new GamePiece(true,1,deck.get(0)));
-			deck.remove(0);
+			for (int i = 1; i <= 13; i++)
+			{
+				Card c = new Card(i, s);
+				allCards.add(c);
+			}
 		}
-		*/
+		//Add deck: AC,JC,8C,10H,7D,4S,2S,7C,8S,6C,KS,AS,AH,10C,7H,KD,5C,6S,JD,9H,4D,9C,8D,9D
+		deck.add(allCards.get(26));
+		deck.add(allCards.get(2*13+10));
+		deck.add(allCards.get(2*13+7));
+		deck.add(allCards.get(3*13+9));
+		deck.add(allCards.get(1*13+6));
+		deck.add(allCards.get(3));
+		deck.add(allCards.get(1));
+		deck.add(allCards.get(2*13+6));
+		deck.add(allCards.get(7));
+		deck.add(allCards.get(2*13+5));
+		deck.add(allCards.get(12));
+		deck.add(allCards.get(0));
+		deck.add(allCards.get(39));
+		deck.add(allCards.get(2*13+9));
+		deck.add(allCards.get(3*13+6));
+		deck.add(allCards.get(13+12));
+		deck.add(allCards.get(2*13+4));
+		deck.add(allCards.get(5));
+		deck.add(allCards.get(1*13+10));
+		deck.add(allCards.get(3*13+8));
+		deck.add(allCards.get(1*13+3));
+		deck.add(allCards.get(2*13+8));
+		deck.add(allCards.get(1*13+7));
+		deck.add(allCards.get(1*13+8));
+		
+		// add tab pieces. Aces at 0 S, 13 D, 26 C, 39 H
+		board.get(0).setPiece(new GamePiece(true,1,allCards.get(14)));
+		board.get((1 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(9)));	// 10 S
+		board.get((1 * boardHeight) + 1).setPiece(new GamePiece(true,1,allCards.get(2)));	// 3 S
+		board.get((2 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(13+9)));	// 10 D
+		board.get((2 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(13+5)));	// 6 D
+		board.get((2 * boardHeight) + 2).setPiece(new GamePiece(true,1,allCards.get(13)));	// A D
+		board.get((3 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(39+11)));	// Q H
+		board.get((3 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(39+12)));	// K H
+		board.get((3 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(39+1)));	// 2 H
+		board.get((3 * boardHeight) + 3).setPiece(new GamePiece(true,1,allCards.get(26+11)));	// Q C
+		board.get((4 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(26+2)));	// 3 C
+		board.get((4 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(8)));	// 9 S
+		board.get((4 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(13+11)));	// Q D
+		board.get((4 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(39+3)));	// 4 H
+		board.get((4 * boardHeight) + 4).setPiece(new GamePiece(true,1,allCards.get(26+12)));	// K C
+		board.get((5 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(26+3)));	// 4 C
+		board.get((5 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(39+4)));	// 5 H
+		board.get((5 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(39+10)));	// J H
+		board.get((5 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(39+2)));	// 3 H
+		board.get((5 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(26+1)));	// 2 C
+		board.get((5 * boardHeight) + 5).setPiece(new GamePiece(true,1,allCards.get(39+5)));	// 6 H
+		board.get((6 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(11)));	// Q S
+		board.get((6 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(6)));	// 7 S
+		board.get((6 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(13+2)));	// 3 D
+		board.get((6 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(13+4)));	// 5 D
+		board.get((6 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(39+7)));	// 8 H
+		board.get((6 * boardHeight) + 5).setPiece(new GamePiece(false,1,allCards.get(10)));	// J S
+		board.get((6 * boardHeight) + 6).setPiece(new GamePiece(true,1,allCards.get(4)));	// 5 S
 	}
 	
 	public Game(boolean basicSetup)
@@ -147,10 +222,10 @@ public final class Game {
 			return;
 		if (gameOver)
 			return;
-		if (playsMade++ >= maxPlays)
+		if (++playsMade >= maxPlays)
 		{
 			gameOver = true;
-			return;
+			//return;
 		}
 		if (!isValidMove(move))
 		{
@@ -557,8 +632,8 @@ public final class Game {
 				//System.out.println("from POS: " + fromPos);
 				int fromRank = fromPos.getPiece().getCard().rank;
 				Suit fromSuit = fromPos.getPiece().getCard().suit;
-				if(toPos.isFoundation()) {
-					if(fromRank == 1 && !fromPos.isFoundation()) {
+				if(toPos.isFoundation()) { // placing a card in foundation
+					if(fromRank == 1 && !fromPos.isFoundation()) { // check if foundation is empty for ace moves
 						if(foundation0.size() == 0 && toPos.getFoundationNum() == 0) {
 							validMoves.add(new Move(fromPos, board.get(f0Pos)));
 						} else if(foundation1.size() == 0 && toPos.getFoundationNum() == 1) {
@@ -570,9 +645,10 @@ public final class Game {
 						} 
 						continue;
 					}
-					if (toPos.getPiece() == null || toPos.getPiece().getCard() == null) continue;
-					int toRank = toPos.getPiece().getCard().rank;
-					Suit toSuit = toPos.getPiece().getCard().suit;
+					Card toCard = getTopFoundationCard(toPos.getFoundationNum());
+					if (toCard == null) continue;
+					int toRank = toCard.rank;
+					Suit toSuit = toCard.suit;
 					if(fromSuit == toSuit && fromRank - toRank == 1 && (fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX())))) {
 						validMoves.add(new Move(fromPos, toPos));
 					}
@@ -744,6 +820,33 @@ public final class Game {
 		return g;
 	}
 	
+	public Card getTopFoundationCard(int foundationNum)
+	{
+		Card ret = null;
+		switch(foundationNum) {
+			case(0):
+				if (!foundation0.isEmpty())
+					ret = foundation0.get(foundation0.size()-1);
+				break;
+			case(1):
+				if (!foundation1.isEmpty())
+					ret = foundation1.get(foundation1.size()-1);
+				break;
+			case(2):
+				if (!foundation2.isEmpty())
+					ret = foundation2.get(foundation2.size()-1);
+				break;
+			case(3):
+				if (!foundation3.isEmpty())
+					ret = foundation3.get(foundation3.size()-1);
+				break;
+			default:
+				System.out.println("Invalid foundation number in getTopFoundationCard!");
+				return null;
+		}
+		return ret;
+	}
+	
 	public void printBoardText(List<Position> board)
 	{
 		int i = 0;
@@ -756,12 +859,12 @@ public final class Game {
 				if (p.getCard() != null)
 				{
 					if (p.isFlipped())
-						System.out.print(p.getCard().toString() + " | ");
+						System.out.print(p.getCard().toString() + "  | ");
 					else
-						System.out.print("**** | ");
+						System.out.print("*" + p.getCard().toString() + " | ");
 				}
 				else
-					System.out.print("     | ");
+					System.out.print("      | ");
 				i++;
 			}
 			System.out.println();

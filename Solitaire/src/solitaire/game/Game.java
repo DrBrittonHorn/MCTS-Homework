@@ -14,7 +14,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 100, deckFlips = 0, maxDeckFlips = 3;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 72, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -59,8 +59,9 @@ public final class Game {
 		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 2));
 		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 3));
 		
-		setupGame();
+		//setupGame();
 		//setupTestGame();
+		setupTestEasyWinGame();
 		
 		/*
 		// for testing purposes only
@@ -135,7 +136,7 @@ public final class Game {
 		deck.add(allCards.get(1*13+8));
 		
 		// add tab pieces. Aces at 0 S, 13 D, 26 C, 39 H
-		board.get(0).setPiece(new GamePiece(true,1,allCards.get(14)));
+		board.get(0).setPiece(new GamePiece(true,1,allCards.get(14)));	// 2 D
 		board.get((1 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(9)));	// 10 S
 		board.get((1 * boardHeight) + 1).setPiece(new GamePiece(true,1,allCards.get(2)));	// 3 S
 		board.get((2 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(13+9)));	// 10 D
@@ -163,6 +164,82 @@ public final class Game {
 		board.get((6 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(39+7)));	// 8 H
 		board.get((6 * boardHeight) + 5).setPiece(new GamePiece(false,1,allCards.get(10)));	// J S
 		board.get((6 * boardHeight) + 6).setPiece(new GamePiece(true,1,allCards.get(4)));	// 5 S
+	}
+	
+	private void setupTestEasyWinGame() 
+	{
+		List<Card> allCards = new ArrayList<Card>();
+		// Generate all cards
+		// spade, diamond, club, heart. Aces at 0 S, 13 D, 26 C, 39 H
+		for (Suit s : Suit.values())
+		{
+			for (int i = 1; i <= 13; i++)
+			{
+				Card c = new Card(i, s);
+				allCards.add(c);
+			}
+		}
+		//Add deck
+		deck.add(allCards.get(51));
+		deck.add(allCards.get(38));
+		deck.add(allCards.get(12));
+		deck.add(allCards.get(37));
+		deck.add(allCards.get(11));
+		deck.add(allCards.get(25));
+		deck.add(allCards.get(10));
+		deck.add(allCards.get(24));
+		deck.add(allCards.get(50));
+		deck.add(allCards.get(23));
+		deck.add(allCards.get(49));
+		deck.add(allCards.get(36));
+		deck.add(allCards.get(48));
+		deck.add(allCards.get(35));
+		deck.add(allCards.get(9));
+		deck.add(allCards.get(34));
+		deck.add(allCards.get(8));
+		deck.add(allCards.get(22));
+		deck.add(allCards.get(7));
+		deck.add(allCards.get(21));
+		deck.add(allCards.get(47));
+		deck.add(allCards.get(20));
+		deck.add(allCards.get(46));
+		deck.add(allCards.get(33));
+		
+		// add tab pieces. Aces at 0 S, 13 D, 26 C, 39 H
+		board.get(0).setPiece(new GamePiece(true,1,allCards.get(13)));
+		
+		board.get((1 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(1)));
+		board.get((1 * boardHeight) + 1).setPiece(new GamePiece(true,1,allCards.get(39)));
+		
+		board.get((2 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(42)));
+		board.get((2 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(15)));
+		board.get((2 * boardHeight) + 2).setPiece(new GamePiece(true,1,allCards.get(26)));
+		
+		board.get((3 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(30)));
+		board.get((3 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(29)));
+		board.get((3 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(41)));
+		board.get((3 * boardHeight) + 3).setPiece(new GamePiece(true,1,allCards.get(0)));
+		
+		board.get((4 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(31)));
+		board.get((4 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(4)));
+		board.get((4 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(3)));
+		board.get((4 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(28)));
+		board.get((4 * boardHeight) + 4).setPiece(new GamePiece(true,1,allCards.get(14)));
+		
+		board.get((5 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(45)));
+		board.get((5 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(5)));
+		board.get((5 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(18)));
+		board.get((5 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(17)));
+		board.get((5 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(2)));
+		board.get((5 * boardHeight) + 5).setPiece(new GamePiece(true,1,allCards.get(40)));
+		
+		board.get((6 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(6)));
+		board.get((6 * boardHeight) + 1).setPiece(new GamePiece(false,1,allCards.get(32)));
+		board.get((6 * boardHeight) + 2).setPiece(new GamePiece(false,1,allCards.get(19)));
+		board.get((6 * boardHeight) + 3).setPiece(new GamePiece(false,1,allCards.get(44)));
+		board.get((6 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(43)));
+		board.get((6 * boardHeight) + 5).setPiece(new GamePiece(false,1,allCards.get(16)));
+		board.get((6 * boardHeight) + 6).setPiece(new GamePiece(true,1,allCards.get(27)));
 	}
 	
 	public Game(boolean basicSetup)
@@ -506,6 +583,8 @@ public final class Game {
 		if(foundation0.size() == 13  && foundation1.size()== 13 &&
 				foundation2.size() == 13 && foundation3.size() == 13) 
 			return 1;
+		if (maxPlays <= playsMade)
+			return -1;
 		//else if(deckFlips >= 3)
 		//	return -1;
 		return 0;
@@ -513,7 +592,7 @@ public final class Game {
 	
 	public float getBoardScore(List<Position> origBoard)
 	{
-		return foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size();
+		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()); // + ((maxPlays-playsMade) >> 4);
 	}
 	
 	public boolean gameOver()

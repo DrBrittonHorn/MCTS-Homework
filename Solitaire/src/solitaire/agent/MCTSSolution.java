@@ -45,9 +45,9 @@ public class MCTSSolution extends Agent {
 		
 		// choose the child with the best win percentage
 		Node ret = bestChildWinPct(root);
-		//printTree(root);
+		// printTree(root);
 		if (ret == null) return null;
-		root.parent = null;
+		
 		for (Node n : root.children)
 		{
 			if (!n.equals(ret))
@@ -57,7 +57,7 @@ public class MCTSSolution extends Agent {
 			}
 		}
 		root = ret;
-		
+		root.parent = null;
 		return ret.moveToGetHere;
 	}
 	
@@ -102,7 +102,7 @@ public class MCTSSolution extends Agent {
 		Node node = root;
 		int iterationCount = 0;
 		// stop in timeDue milliseconds or after 10 million iterations
-		while (System.currentTimeMillis() < timeDue && iterationCount++ < 1000000)
+		while (System.currentTimeMillis() < timeDue && iterationCount++ < 10000)
 		{
 			/*for (Node child : root.children)
 			{
@@ -133,6 +133,7 @@ public class MCTSSolution extends Agent {
 		long endTime = System.currentTimeMillis();
         Date endDate = new Date(endTime); 
 		System.out.println("time end: " + format.format(endDate));
+		// add stop here
 	}
 	
 	private Node selection(Node node)
@@ -144,25 +145,36 @@ public class MCTSSolution extends Agent {
 			// get the highest uct value child from this expanded node
 			node = node.bestUCT();
 		}
+		//System.out.println("selected node stats");
+		//node.printNodeStats();
 		// now that we're here, we know the node is not expanded or is terminal
 		
 		// check if we've seen this node before, if not we need to create children
 		// if it's terminal, will be visited but not expanded (return the terminal node)
+		boolean added = false;
 		if (!node.isVisited)
 		{
 			if (!node.isTerminal)
 			{
+				added = true;
 				// create children for each move
 				addChildren(node);
 			}
 			// node is now visited
 			node.isVisited = true;
 		}
-		
+		/*if (added)
+			System.out.println("added children");
+		else
+			System.out.println("no children added: " + node.isTerminal + ", " + node.isVisited);
+		*/
 		// if node is terminal, simply return the terminal node
 		// this handles end-of-game states when all children have been created
 		if (node.isTerminal)
+		{
+			System.out.println("Node is terminal");
 			return node;
+		}
 		
 		// pick unvisited child
 		for (Node child : node.children)
@@ -177,8 +189,13 @@ public class MCTSSolution extends Agent {
 				// check if it's not terminal and add it's children
 				// need to do this now so the algorithm doesn't get hung up on the next tree level
 				if (!child.isTerminal)
+				{
+					//System.out.println("added children to child");
 					addChildren(child);
+				}
 				// return the unvisited child
+				//System.out.println("return child stats");
+				//child.printNodeStats();
 				return child;
 			}
 		}
@@ -201,9 +218,11 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("%%%%%%%%%%%%%%%% Rolling out %%%%%%%%%%%%%%%%%%%");
-		//rolloutBoard.printGame();
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i++ < 50)
+		//
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays) // && i++ < 50)
 		{
+			//System.out.println("Rolling out -- plays: " + rolloutBoard.playsMade);
+			//rolloutBoard.printGame();
 			List<Move> bestMoves = new ArrayList<Move>(); // what about equal best moves? Need to pick at random I think.
 			double bestScore = -1;
 			double s = -1;
@@ -259,7 +278,7 @@ public class MCTSSolution extends Agent {
 		int f2 = g.foundation2.size();
 		int f3 = g.foundation3.size();
 		
-		return score + 10*(f0+f1+f2+f3);
+		return score + ((f0+f1+f2+f3)<<3);
 	}
 	
 	private double rollout(Node leaf)
@@ -375,7 +394,7 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			//child.printNode();
+			child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore)
 			{
@@ -490,6 +509,14 @@ public class MCTSSolution extends Agent {
 					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
 					: "null"));
 			System.out.println("===== Node End =====");
+		}
+		
+		public void printNodeStats()
+		{
+			System.out.println("score: " + this.score + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", avg: " + (score/simulations) + 
+					", isTerminal: " + this.isTerminal + ", winner: " + this.winner + 
+					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
+					: "null"));
 		}
 		
 		public void deleteChildren()

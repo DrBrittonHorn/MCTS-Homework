@@ -18,6 +18,7 @@ public class MCTSSolution extends Agent {
 	private Game game = null;
 	private static final Random rand = new Random();
 	Node root = null;
+	private static int nextID = 0;
 
 	@Override
 	public Move getMove(Game game, long timeLimit) 
@@ -45,7 +46,7 @@ public class MCTSSolution extends Agent {
 		
 		// choose the child with the best win percentage
 		Node ret = bestChildWinPct(root);
-		// printTree(root);
+		//printTree(root);
 		if (ret == null) return null;
 		
 		for (Node n : root.children)
@@ -76,7 +77,9 @@ public class MCTSSolution extends Agent {
 				depth = rover.depth;
 				System.out.println("*********************** LEVEL " + depth + " *********************");
 			}
-			System.out.println("move to get here: " + rover.moveToGetHere);
+			System.out.println("id: " + rover.id + ", parent: " + 
+					(rover.parent == null ? " " : rover.parent.id) + ", move to get here: " + rover.moveToGetHere + "isTerminal: " + rover.isTerminal);
+			//rover.printNode(););
 			for (Node child : rover.children)
 			{
 				if (child.simulations > 0)
@@ -113,8 +116,8 @@ public class MCTSSolution extends Agent {
 			node = selection(root);
 			//System.out.println("after selection");
 			// simulate play and get game result
-			//double rolloutResult = rollout(node);
-			double rolloutResult = greedyRollout(node);
+			double rolloutResult = rollout(node);
+			//double rolloutResult = greedyRollout(node);
 			//System.out.println("after rollout");
 			// propagate 
 			backpropagate(node, rolloutResult);
@@ -172,9 +175,11 @@ public class MCTSSolution extends Agent {
 		// this handles end-of-game states when all children have been created
 		if (node.isTerminal)
 		{
-			System.out.println("Node is terminal");
+			//System.out.println("Node is terminal");
 			return node;
 		}
+		//else
+		//	System.out.println("Node not terminal");
 		
 		// pick unvisited child
 		for (Node child : node.children)
@@ -218,7 +223,7 @@ public class MCTSSolution extends Agent {
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("%%%%%%%%%%%%%%%% Rolling out %%%%%%%%%%%%%%%%%%%");
-		//
+		//rolloutBoard.printGame();
 		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays) // && i++ < 50)
 		{
 			//System.out.println("Rolling out -- plays: " + rolloutBoard.playsMade);
@@ -231,7 +236,9 @@ public class MCTSSolution extends Agent {
 				try
 				{
 					s = getInterimScore(rolloutBoard.simulateMove(rolloutBoard.board, m));
+					//s = rolloutBoard.getBoardScore(rolloutBoard.simulateMove(rolloutBoard.board, m).getBoard());
 					//System.out.println("Move: " + m);
+					//rolloutBoard.simulateMove(rolloutBoard.board, m).printGame();
 					//System.out.println("Int Score: " + s);
 				}
 				catch (Exception e)
@@ -253,13 +260,16 @@ public class MCTSSolution extends Agent {
 				}
 			}
 			int randInt = rand.nextInt(bestMoves.size());
+			//System.out.println("Move: " + bestMoves.get(randInt));
+			//rolloutBoard.simulateMove(rolloutBoard.board, bestMoves.get(randInt)).printGame();
+			//System.out.println("Int Score: " + s);
 			rolloutBoard = rolloutBoard.simulateMove(rolloutBoard.board, bestMoves.get(randInt));
 			//rolloutBoard.printGame();
 			validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		}
 		//System.out.println("%%%%%%%%%%%%%%%% ROLL DONE %%%%%%%%%%%%%%%%%%%");
-		/*System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board));
-		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		//System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board) + " ||| " + leaf.moveToGetHere);
+		/*System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
 		rolloutBoard.printGame();
 		System.out.println(" $$$$$$$$$$$$$$$$$$$$$$ END OF ROLLOUT $$$$$$$$$$$$$$$$$$$$$");*/
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
@@ -290,14 +300,14 @@ public class MCTSSolution extends Agent {
 		// set the node's turn
 		int turn = leaf.turn;
 		// copy board so we don't mess any future nodes up
-		Game rolloutBoard = leaf.boardState.clone();
+		Game rolloutBoard = leaf.boardState;//.clone();
 		// get possible next moves
 		List<Move> validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("Rolling out");
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && i < 50)
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays)// && i < 50)
 		{
 			i++;
 			//if ((i % 100) == 0)
@@ -322,8 +332,8 @@ public class MCTSSolution extends Agent {
 		}
 
 		// return the game result
-		/*System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board));
-		System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
+		//System.out.println(" $$$$$$$$$$$$$$$$$$$$$ " + rolloutBoard.getBoardScore(rolloutBoard.board));
+		/*System.out.println("i: " + i + ", plays: " + rolloutBoard.playsMade);
 		rolloutBoard.printGame();
 		System.out.println(" $$$$$$$$$$$$$$$$$$$$$$ END OF ROLLOUT $$$$$$$$$$$$$$$$$$$$$");*/
 		return rolloutBoard.getBoardScore(rolloutBoard.board);
@@ -447,6 +457,7 @@ public class MCTSSolution extends Agent {
 		public int winner;
 		public Move moveToGetHere;
 		public int depth;
+		public int id;
 		
 		Node()
 		{
@@ -457,6 +468,7 @@ public class MCTSSolution extends Agent {
 			this.simulations = 0;
 			this.score = 0;
 			this.children = new ArrayList<Node>();
+			this.id = nextID++;
 		}
 		
 		/*
@@ -492,7 +504,7 @@ public class MCTSSolution extends Agent {
 			// calculate uct
 			// uct = (w_i / s_i) + (C * sqrt(log(S)/s_i))
 			return (this.score / (double) this.simulations) + 
-					(2 * Math.sqrt(
+					(2 * 100 * Math.sqrt( // added C_p parameter since score is outside [0,1]
 							Math.log(this.parent.simulations) / (double) this.simulations)
 							);
 		}
@@ -513,7 +525,7 @@ public class MCTSSolution extends Agent {
 		
 		public void printNodeStats()
 		{
-			System.out.println("score: " + this.score + ", simulations: " + this.simulations + ", uct: " + this.uct() + ", avg: " + (score/simulations) + 
+			System.out.println("score: " + this.score + ", simulations: " + this.simulations + ", parent sim: " + this.parent.simulations + ", uct: " + this.uct() + ", avg: " + (score/(double)simulations) + 
 					", isTerminal: " + this.isTerminal + ", winner: " + this.winner + 
 					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
 					: "null"));

@@ -14,7 +14,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 80, deckFlips = 0, maxDeckFlips = 2;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 100, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -61,8 +61,8 @@ public final class Game {
 		
 		//setupGame();
 		//setupTestGame();
-		setupTestEasyWinGame();
-		//setupInterimGame();
+		//setupTestEasyWinGame();
+		setupInterimGame();
 		
 		/*
 		// for testing purposes only
@@ -261,27 +261,27 @@ public final class Game {
 		deck.add(allCards.get(51));
 		deck.add(allCards.get(38));
 		deck.add(allCards.get(12));
-		deck.add(allCards.get(37));
-		deck.add(allCards.get(11));
+//		deck.add(allCards.get(37));
+//		deck.add(allCards.get(11));
 		deck.add(allCards.get(25));
-		deck.add(allCards.get(10));
-		deck.add(allCards.get(24));
-		deck.add(allCards.get(50));
-		deck.add(allCards.get(23));
-		deck.add(allCards.get(49));
-		deck.add(allCards.get(36));
-		deck.add(allCards.get(48));
-		deck.add(allCards.get(35));
-		deck.add(allCards.get(9));
-		deck.add(allCards.get(34));
-		deck.add(allCards.get(8));
-		deck.add(allCards.get(22));
-		deck.add(allCards.get(7));
-		deck.add(allCards.get(21));
-		deck.add(allCards.get(47));
-		deck.add(allCards.get(20));
-		deck.add(allCards.get(46));
-		deck.add(allCards.get(33));
+//		deck.add(allCards.get(10));
+//		deck.add(allCards.get(24));
+//		deck.add(allCards.get(50));
+//		deck.add(allCards.get(23));
+//		deck.add(allCards.get(49));
+//		deck.add(allCards.get(36));
+//		deck.add(allCards.get(48));
+//		deck.add(allCards.get(35));
+//		deck.add(allCards.get(9));
+//		deck.add(allCards.get(34));
+//		deck.add(allCards.get(8));
+//		deck.add(allCards.get(22));
+//		deck.add(allCards.get(7));
+//		deck.add(allCards.get(21));
+//		deck.add(allCards.get(47));
+//		deck.add(allCards.get(20));
+//		deck.add(allCards.get(46));
+//		deck.add(allCards.get(33));
 
 		foundation0.add(allCards.get(0));
 		foundation0.add(allCards.get(1));
@@ -290,6 +290,12 @@ public final class Game {
 		foundation0.add(allCards.get(4));
 		foundation0.add(allCards.get(5));
 		foundation0.add(allCards.get(6));
+		foundation0.add(allCards.get(7));
+		foundation0.add(allCards.get(8));
+		foundation0.add(allCards.get(9));
+		foundation0.add(allCards.get(10));
+		foundation0.add(allCards.get(11));
+//		board.get((6 * boardHeight) + 0).setPiece(new GamePiece(false,1,allCards.get(6)));
 		
 		foundation1.add(allCards.get(13));
 		foundation1.add(allCards.get(14));
@@ -298,6 +304,11 @@ public final class Game {
 		foundation1.add(allCards.get(17));
 		foundation1.add(allCards.get(18));
 		foundation1.add(allCards.get(19));
+		foundation1.add(allCards.get(20));
+		foundation1.add(allCards.get(21));
+		foundation1.add(allCards.get(22));
+		foundation1.add(allCards.get(23));
+		foundation1.add(allCards.get(24));
 		
 		foundation2.add(allCards.get(26));
 		foundation2.add(allCards.get(27));
@@ -306,6 +317,14 @@ public final class Game {
 		foundation2.add(allCards.get(30));
 		foundation2.add(allCards.get(31));
 		foundation2.add(allCards.get(32));
+		foundation2.add(allCards.get(33));
+		foundation2.add(allCards.get(34));
+		foundation2.add(allCards.get(35));
+		foundation2.add(allCards.get(36));
+		foundation2.add(allCards.get(37));
+//		board.get((3 * boardHeight) + 0).setPiece(new GamePiece(true,1,allCards.get(30)));
+//		board.get((4 * boardHeight) + 0).setPiece(new GamePiece(true,1,allCards.get(31)));
+//		board.get((6 * boardHeight) + 1).setPiece(new GamePiece(true,1,allCards.get(32)));
 		
 		foundation3.add(allCards.get(39));
 		foundation3.add(allCards.get(40));
@@ -314,8 +333,16 @@ public final class Game {
 		foundation3.add(allCards.get(43));
 		foundation3.add(allCards.get(44));
 		foundation3.add(allCards.get(45));
+		foundation3.add(allCards.get(46));
+		foundation3.add(allCards.get(47));
+		foundation3.add(allCards.get(48));
+		foundation3.add(allCards.get(49));
+		foundation3.add(allCards.get(50));
+//		board.get((5 * boardHeight) + 0).setPiece(new GamePiece(true,1,allCards.get(45)));
 		
-		playsMade = 40;
+		
+		
+		playsMade = 50;
 
 	}
 	
@@ -669,7 +696,7 @@ public final class Game {
 	
 	public float getBoardScore(List<Position> origBoard)
 	{
-		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()); // + ((maxPlays-playsMade) >> 4);
+		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()) + ((maxPlays-playsMade) >> 4);
 	}
 	
 	public boolean gameOver()

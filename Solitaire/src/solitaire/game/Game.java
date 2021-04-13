@@ -14,7 +14,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 72, deckFlips = 0, maxDeckFlips = 2;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 80, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -62,6 +62,7 @@ public final class Game {
 		//setupGame();
 		//setupTestGame();
 		setupTestEasyWinGame();
+		//setupInterimGame();
 		
 		/*
 		// for testing purposes only
@@ -240,6 +241,82 @@ public final class Game {
 		board.get((6 * boardHeight) + 4).setPiece(new GamePiece(false,1,allCards.get(43)));
 		board.get((6 * boardHeight) + 5).setPiece(new GamePiece(false,1,allCards.get(16)));
 		board.get((6 * boardHeight) + 6).setPiece(new GamePiece(true,1,allCards.get(27)));
+	}
+	
+	private void setupInterimGame()
+	{
+		List<Card> allCards = new ArrayList<Card>();
+		// Generate all cards
+		// spade, diamond, club, heart. Aces at 0 S, 13 D, 26 C, 39 H
+		for (Suit s : Suit.values())
+		{
+			for (int i = 1; i <= 13; i++)
+			{
+				Card c = new Card(i, s);
+				allCards.add(c);
+			}
+		}
+		
+		//Add deck
+		deck.add(allCards.get(51));
+		deck.add(allCards.get(38));
+		deck.add(allCards.get(12));
+		deck.add(allCards.get(37));
+		deck.add(allCards.get(11));
+		deck.add(allCards.get(25));
+		deck.add(allCards.get(10));
+		deck.add(allCards.get(24));
+		deck.add(allCards.get(50));
+		deck.add(allCards.get(23));
+		deck.add(allCards.get(49));
+		deck.add(allCards.get(36));
+		deck.add(allCards.get(48));
+		deck.add(allCards.get(35));
+		deck.add(allCards.get(9));
+		deck.add(allCards.get(34));
+		deck.add(allCards.get(8));
+		deck.add(allCards.get(22));
+		deck.add(allCards.get(7));
+		deck.add(allCards.get(21));
+		deck.add(allCards.get(47));
+		deck.add(allCards.get(20));
+		deck.add(allCards.get(46));
+		deck.add(allCards.get(33));
+
+		foundation0.add(allCards.get(0));
+		foundation0.add(allCards.get(1));
+		foundation0.add(allCards.get(2));
+		foundation0.add(allCards.get(3));
+		foundation0.add(allCards.get(4));
+		foundation0.add(allCards.get(5));
+		foundation0.add(allCards.get(6));
+		
+		foundation1.add(allCards.get(13));
+		foundation1.add(allCards.get(14));
+		foundation1.add(allCards.get(15));
+		foundation1.add(allCards.get(16));
+		foundation1.add(allCards.get(17));
+		foundation1.add(allCards.get(18));
+		foundation1.add(allCards.get(19));
+		
+		foundation2.add(allCards.get(26));
+		foundation2.add(allCards.get(27));
+		foundation2.add(allCards.get(28));
+		foundation2.add(allCards.get(29));
+		foundation2.add(allCards.get(30));
+		foundation2.add(allCards.get(31));
+		foundation2.add(allCards.get(32));
+		
+		foundation3.add(allCards.get(39));
+		foundation3.add(allCards.get(40));
+		foundation3.add(allCards.get(41));
+		foundation3.add(allCards.get(42));
+		foundation3.add(allCards.get(43));
+		foundation3.add(allCards.get(44));
+		foundation3.add(allCards.get(45));
+		
+		playsMade = 40;
+
 	}
 	
 	public Game(boolean basicSetup)
@@ -725,10 +802,18 @@ public final class Game {
 						continue;
 					}
 					Card toCard = getTopFoundationCard(toPos.getFoundationNum());
-					if (toCard == null) continue;
+					if (toCard == null)
+					{
+						//System.out.println("Null to foundation card");
+						continue;
+					}
 					int toRank = toCard.rank;
 					Suit toSuit = toCard.suit;
-					if(fromSuit == toSuit && fromRank - toRank == 1 && (fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX())))) {
+					if(fromSuit == toSuit && fromRank - toRank == 1 && 
+							(
+									(fromPos.getX() >= 0 && fromPos.equals(getLastFlippedCardInTab(fromPos.getX()))) ||
+									(fromPos.isWaste())
+							)) {
 						validMoves.add(new Move(fromPos, toPos));
 					}
 					continue;
@@ -994,11 +1079,19 @@ public final class Game {
 		System.out.println(" ===== END WASTE ======");
 	}
 	
+	public void printTopWaste()
+	{
+		if (waste.size() > 0)
+			System.out.println("Waste top: " + waste.get(waste.size()-1));
+		else
+			System.out.println("Waste top: null");
+	}
+	
 	public void printGame()
 	{
 		printBoardText(board);
 		printDeck(deck);
-		
+		printTopWaste();
 	}
 	
 	public List<Position> copyBoard(List<Position> origBoard)

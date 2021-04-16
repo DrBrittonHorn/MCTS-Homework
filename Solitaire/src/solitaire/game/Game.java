@@ -259,6 +259,7 @@ public final class Game {
 		
 		//Add deck
 		deck.add(allCards.get(51));
+//		board.get((0 * boardHeight) + 0).setPiece(new GamePiece(true,1,allCards.get(51)));
 		deck.add(allCards.get(38));
 		deck.add(allCards.get(12));
 //		deck.add(allCards.get(37));
@@ -473,7 +474,15 @@ public final class Game {
 			{
 				// move to tab
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
-				board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				if (lastCard == null) // empty tab
+				{
+					board.get(move.getToPosition().getX() * boardHeight).setPiece(new GamePiece(true, 1, oldCard));
+				}
+				
+				else
+				{
+					board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				}
 			}
 		}
 		else if (move.getFromPosition().isWaste())
@@ -696,7 +705,7 @@ public final class Game {
 	
 	public float getBoardScore(List<Position> origBoard)
 	{
-		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()) + ((maxPlays-playsMade) >> 4);
+		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()) + ((maxPlays-playsMade)/ (float) 16);
 	}
 	
 	public boolean gameOver()
@@ -762,6 +771,10 @@ public final class Game {
 				}
 			} else if(lastUnflipped != null) {
 				validMoves.add(new Move(null, lastUnflipped));
+			}
+			else
+			{
+				toCards.add(board.get(i*boardHeight));
 			}
 		}
 		//Add foundation cards
@@ -845,9 +858,19 @@ public final class Game {
 					}
 					continue;
 				}
+				if (toPos.getPiece().getCard() == null) // blank tab
+				{
+					if(fromRank == 13) {
+						//System.out.println("I'm here!");
+						if(board.get(toPos.getX()*boardHeight).getPiece().getCard() == null) {
+							validMoves.add(new Move(fromPos, board.get(toPos.getX()*boardHeight)));
+						}
+					}
+					continue;
+				}
 				int toRank = toPos.getPiece().getCard().rank;
 				Suit toSuit = toPos.getPiece().getCard().suit;
-
+				
 				if(toRank - fromRank == 1) {
 					if((fromSuit == Suit.HEART || fromSuit == Suit.DIAMOND) &&
 							(toSuit == Suit.SPADE || toSuit == Suit.CLUB)) {
@@ -860,13 +883,14 @@ public final class Game {
 							validMoves.add(new Move(fromPos, toPos));
 						}
 					}
-				} else if(fromRank == 13 ) {
+				}/* else if(fromRank == 13 ) {
+					System.out.println("Probably shouldn't be here");
 					for(int tab=0; tab<7; tab++) {
 						if(board.get(tab*boardHeight).getPiece().getCard() == null) {
 							validMoves.add(new Move(fromPos, board.get(tab*boardHeight)));
 						}
 					}
-				}
+				}*/
 			}
 		}
 		return validMoves;

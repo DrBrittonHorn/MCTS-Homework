@@ -50,14 +50,14 @@ public final class Game {
 			}
 		}
 		// add deck position
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), true, false, false, -1));
+		board.add(new Position(-1, -1, nullPiece, true, false, false, -1));
 		// add waste position
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, true, false, -1));
+		board.add(new Position(-1, -1, nullPiece, false, true, false, -1));
 		// add four foundation positions
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 0));
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 1));
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 2));
-		board.add(new Position(-1, -1, new GamePiece(false,0, null), false, false, true, 3));
+		board.add(new Position(-1, -1, nullPiece, false, false, true, 0));
+		board.add(new Position(-1, -1, nullPiece, false, false, true, 1));
+		board.add(new Position(-1, -1, nullPiece, false, false, true, 2));
+		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
 		//setupGame();
 		//setupTestGame();
@@ -578,12 +578,12 @@ public final class Game {
 						System.out.println("Bad foundation number!");
 						return;
 				}
-				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
+				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(nullPiece);
 				return;
 			}
 			else if (move.getToPosition().getX() >= 0)
 			{
-				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(new GamePiece(false,0,null));
+				board.get((fromPosition.getX() * boardHeight) + fromPosition.getY()).setPiece(nullPiece);
 				int tmpItr = 0;
 				// move to another tab
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
@@ -607,7 +607,7 @@ public final class Game {
 					GamePiece nextPiece = board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).getPiece();
 					if (nextPiece.getCard() != null)
 					{
-						board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).setPiece(new GamePiece(false,0,null));
+						board.get((fromPosition.getX() * boardHeight) + fromPosition.getY() + tmpItr).setPiece(nullPiece);
 						if (lastCard != null)
 							board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1 + tmpItr).setPiece(new GamePiece(true, 1, nextPiece.getCard()));
 						else

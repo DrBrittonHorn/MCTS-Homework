@@ -1155,6 +1155,8 @@ public final class Game {
 					else
 						System.out.print("*" + p.getCard().toString() + " | ");
 				}
+				else if (p.equals(hiddenPiece))
+					System.out.print(" **** | ");
 				else
 					System.out.print("      | ");
 				i++;

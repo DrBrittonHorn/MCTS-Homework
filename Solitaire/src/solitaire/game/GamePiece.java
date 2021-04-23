@@ -62,7 +62,7 @@ public class GamePiece {
           
         return p.flipped == this.flipped &&
         		p.owner == this.owner &&
-        		p.card.equals(this.card);
+        		java.util.Objects.equals(p.card,this.card);
 	}
 	
 	@Override

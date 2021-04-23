@@ -94,7 +94,7 @@ public class Executor {
 			if (agent1.responded)
 			{
 				//System.out.println("Human responded");
-				game.advanceGame(agent1.getMove(game, runTime));
+				game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
 				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
 				{
 					System.out.println("Agent 1 took too long to respond");

@@ -38,6 +38,7 @@ public final class Game {
 	public boolean isSingleFlip = false;
 	private int lastFlipCount;
 	private GamePiece nullPiece = new GamePiece(false,0, null);
+	public GamePiece hiddenPiece = new GamePiece(false,1, null);
 	
 	public Game() {
 		// Initialize all positions to be blank
@@ -59,10 +60,10 @@ public final class Game {
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 2));
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
-		//setupGame();
+		setupGame();
 		//setupTestGame();
 		//setupTestEasyWinGame();
-		setupInterimGame();
+		//setupInterimGame();
 		
 		/*
 		// for testing purposes only
@@ -350,6 +351,82 @@ public final class Game {
 	public Game(boolean basicSetup)
 	{
 		
+	}
+	
+	public Game createHiddenInfoVersion()
+	{
+		Game ret = new Game(true);
+		
+		ret.board = new ArrayList<Position>();
+		for (int x = 0; x < boardWidth; x++)
+		{
+			for (int y = 0; y < boardHeight; y++)
+			{
+				ret.board.add(new Position(x, y, nullPiece));
+			}
+		}
+		// add deck position
+		ret.board.add(new Position(-1, -1, nullPiece, true, false, false, -1));
+		// add waste position
+		ret.board.add(new Position(-1, -1, nullPiece, false, true, false, -1));
+		// add four foundation positions
+		ret.board.add(new Position(-1, -1, nullPiece, false, false, true, 0));
+		ret.board.add(new Position(-1, -1, nullPiece, false, false, true, 1));
+		ret.board.add(new Position(-1, -1, nullPiece, false, false, true, 2));
+		ret.board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
+		
+		// fill tabs (only flipped card is known)
+		for (int tab = 0; tab < boardWidth; tab++)
+		{
+			for (int stackHeight = tab; stackHeight < 7; stackHeight++)
+			{
+				ret.board.get((stackHeight * boardHeight) + tab).setPiece(tab == stackHeight ? 
+						new GamePiece(true, 1, board.get((stackHeight * boardHeight) + tab).getPiece().getCard()) : 
+							hiddenPiece);
+			}
+		}
+		
+		// fill deck with unknown cards
+		if (deckFlips > 0)
+		{
+			for (Card c : deck)
+			{
+				ret.deck.add(c);
+			}
+		}
+		else
+		{
+			for (Card c : deck)
+			{
+				ret.deck.add(null);
+			}
+		}
+		
+		// fill waste
+		for (Card c : waste)
+		{
+			ret.waste.add(c);
+		}
+		
+		// fill foundations
+		for (Card c : foundation0)
+		{
+			ret.foundation0.add(c);
+		}
+		for (Card c : foundation1)
+		{
+			ret.foundation1.add(c);
+		}
+		for (Card c : foundation2)
+		{
+			ret.foundation2.add(c);
+		}
+		for (Card c : foundation3)
+		{
+			ret.foundation3.add(c);
+		}
+		
+		return ret;
 	}
 	
 	public List<Position> getBoard()

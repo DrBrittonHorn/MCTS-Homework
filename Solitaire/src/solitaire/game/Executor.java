@@ -18,9 +18,9 @@ public class Executor {
 	
 	public static void main(String[] args) {
 		Executor exec = new Executor();
-		exec.runGame(new Human());
+//		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
-//		exec.runGame(new MCTSSolution());
+		exec.runGame(new MCTSSolution());
 //		exec.testGame();
 	}
 	

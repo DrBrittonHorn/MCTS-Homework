@@ -1192,7 +1192,10 @@ public final class Game {
 		System.out.println(" ===== BEGIN DECK ======");
 		for (Card c : deck)
 		{
-			System.out.println(c.toString());
+			if (c == null)
+				System.out.println("unknown card");
+			else
+				System.out.println(c.toString());
 		}
 		System.out.println(" ===== END DECK ======");
 	}

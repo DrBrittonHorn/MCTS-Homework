@@ -60,9 +60,9 @@ public final class Game {
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 2));
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
-		setupGame();
+//		setupGame();
 		//setupTestGame();
-		//setupTestEasyWinGame();
+		setupTestEasyWinGame();
 		//setupInterimGame();
 		
 		/*
@@ -392,6 +392,7 @@ public final class Game {
 			for (Card c : deck)
 			{
 				ret.deck.add(c);
+				
 			}
 		}
 		else
@@ -499,6 +500,7 @@ public final class Game {
 		{
 			if (move.getToPosition().isDeck())
 			{
+				System.out.println("Got to second if: "+deck.size());
 				if (deckFlips >= maxDeckFlips && deck.size() == 0)
 				{
 					System.out.println("Max deck flips reached");
@@ -508,12 +510,15 @@ public final class Game {
 					flipDeck();
 				else
 					resetDeck();
+				System.out.println(deck.size());
 				return;
 			}
 			else // clicked on unflipped tab
 			{
 				GamePiece oldpiece = board.get((move.getToPosition().getX() * boardHeight)+move.getToPosition().getY()).getPiece();
 				oldpiece.setFlipped(true);
+				if(oldpiece == hiddenPiece)
+					oldpiece.setCard(getRandomUnseenCard());
 				return;
 			}
 		}
@@ -729,9 +734,43 @@ public final class Game {
 			if (deck.size() <= 0) break;
 			flipCount++;
 			Card deckTop = deck.remove(deck.size()-1);
-			waste.add(deckTop);
+			if(deckTop == null) {
+				waste.add(getRandomUnseenCard());
+			} else
+				waste.add(deckTop);
 		}
 		lastFlipCount = flipCount;
+	}
+	
+	private Card getRandomUnseenCard() {
+		List<Card> allCards = new ArrayList<Card>();
+		for (Suit s : Suit.values())
+		{
+			for (int i = 1; i <= 13; i++)
+			{
+				Card c = new Card(i, s);
+				allCards.add(c);
+			}
+		}
+		if (deckFlips > 0) allCards.removeAll(deck);
+		allCards.removeAll(waste);
+		for (int tab = 0; tab < boardWidth; tab++)
+		{
+			Position pos = getLastFlippedCardInTab(tab);
+			while(pos!=null && pos.getPiece().isFlipped()) {
+				allCards.remove(pos.getPiece().getCard());
+				if(pos.getY() != 0) 
+					pos = board.get((pos.getX()*boardHeight)+pos.getY()-1);
+				break;
+			}
+		}
+		allCards.removeAll(foundation0);
+		allCards.removeAll(foundation1);
+		allCards.removeAll(foundation2);
+		allCards.removeAll(foundation3);
+		System.out.println("Unseen cards: ");
+		for(Card c: allCards) System.out.println(c.toString());
+		return allCards.get(rand.nextInt(allCards.size()));
 	}
 	
 	public Position getLastFlippedCardInTab(int tab)
@@ -1112,6 +1151,51 @@ public final class Game {
 		return g;
 	}
 	
+	public Game hiddenInfoSimulateMove(List<Position> board, Move move) {
+		Game g = this.clone();
+		if (isWinningBoard(board) != 0)
+		{
+			System.out.println("Game already won by: " + isWinningBoard(board));
+			return null;
+		}
+		//make next piece be a Card if hidden; if not, advance like normal
+		if(move.getToPosition().getPiece() == hiddenPiece) {
+			//set new piece
+			List<Card> allCards = new ArrayList<Card>();
+			for (Suit s : Suit.values())
+			{
+				for (int i = 1; i <= 13; i++)
+				{
+					Card c = new Card(i, s);
+					allCards.add(c);
+				}
+			}
+			Card newCard = null;
+			if (deckFlips > 0) allCards.removeAll(deck);
+			allCards.removeAll(waste);
+			for (int tab = 0; tab < boardWidth; tab++)
+			{
+				Position pos = getLastFlippedCardInTab(tab);
+				while(pos!=null && pos.getPiece().isFlipped()) {
+					allCards.remove(pos.getPiece().getCard());
+					if(pos.getY() != 0) 
+						pos = g.board.get((pos.getX()*boardHeight)+pos.getY()-1);
+					break;
+				}
+			}
+			allCards.removeAll(foundation0);
+			allCards.removeAll(foundation1);
+			allCards.removeAll(foundation2);
+			allCards.removeAll(foundation3);
+			System.out.println("Unseen cards: ");
+			for(Card c: allCards) System.out.println(c.toString());
+			newCard = allCards.get(rand.nextInt(allCards.size()));
+			move.getToPosition().setPiece(new GamePiece(false, 0, newCard));
+		}
+		g.advanceGame(move);
+		g.printGame();
+		return g;
+	}
 	public Card getTopFoundationCard(int foundationNum)
 	{
 		Card ret = null;
@@ -1202,7 +1286,7 @@ public final class Game {
 		System.out.println(" ===== END DECK ======");
 	}
 	
-	public void printWaste(List<Card> waste)
+	public void printWaste()
 	{
 		System.out.println(" ===== BEGIN WASTE ======");
 		for (Card c : waste)
@@ -1224,7 +1308,7 @@ public final class Game {
 	{
 		printBoardText(board);
 		printDeck(deck);
-		printTopWaste();
+		printWaste();
 	}
 	
 	public List<Position> copyBoard(List<Position> origBoard)

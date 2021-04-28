@@ -516,9 +516,9 @@ public final class Game {
 			else // clicked on unflipped tab
 			{
 				GamePiece oldpiece = board.get((move.getToPosition().getX() * boardHeight)+move.getToPosition().getY()).getPiece();
-				oldpiece.setFlipped(true);
-				if(oldpiece == hiddenPiece)
+				if(oldpiece.equals(hiddenPiece))
 					oldpiece.setCard(getRandomUnseenCard());
+				oldpiece.setFlipped(true);
 				return;
 			}
 		}

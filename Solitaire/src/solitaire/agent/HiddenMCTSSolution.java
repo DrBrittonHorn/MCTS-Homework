@@ -1,6 +1,9 @@
 package solitaire.agent;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import solitaire.game.Game;
@@ -21,26 +24,50 @@ public class HiddenMCTSSolution extends Agent {
 			root.state = game;
 		}
 		root.depth = 0;
-		for (Move m : root.state.getValidMoves(root.state.board, 1))
+		/*for (Move m : root.state.getValidMoves(root.state.board, 1))
 		{
 			System.out.println(m.toString());
-			root.state.simulateMove(root.state.board, m);
-		}
-		//performMCTS(timeDue);
+			root.state.hiddenInfoSimulateMove(root.state.board, m);
+		}*/
+		performMCTS(timeDue);
 		
 		Node ret = bestRootMove();
 		//printTree(root);
-		if (ret == null) return null;
+		if (ret == null)
+		{
+			System.out.println("Returning null from MCTS");
+			return null;
+		}
 		System.out.println("*********** Finished MCTS *************");
+		root = null;
 		return ret.moveToGetHere;
 	}
 	
-	private void performMCTS(long timeDue)
+	private void performMCTS(long timeLimit)
 	{
-		Node n = selection();
-		n = expansion(n);
-		int score = simulate(n);
-		backpropagate(n, score);
+		DateFormat format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS"); 
+		long startTime = System.currentTimeMillis();
+        Date startDate = new Date(startTime); 
+		System.out.println("start time: " + format.format(startDate));
+		long timeDue = System.currentTimeMillis() + timeLimit;
+        Date timeDueDate = new Date(timeDue); 
+		System.out.println("time due: " + format.format(timeDueDate));
+		
+		int iters = 0, maxIter = 100000;
+		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
+		{
+			System.out.println("New MCTS iteration: " + iters);
+			Node n = selection();
+//			System.out.print("Selected Node:");
+//			n.printNode();
+			n = expansion(n);
+//			System.out.print("Expanding node:");
+//			n.printNode();
+			int score = simulate(n);
+			backpropagate(n, score);
+			if (n.parent.simulations == n.parent.children.size())
+				n.parent.isFullyExpanded = true;
+		}
 	}
 	
 	private Node selection()
@@ -60,6 +87,7 @@ public class HiddenMCTSSolution extends Agent {
 			n.children = new ArrayList<Node>();
 			for (Move mv : n.state.getValidMoves(n.state.board, 1))
 			{
+				//System.out.println("Making new child: " + mv);
 				Node child = new Node();
 				child.moveToGetHere = mv;
 				child.depth = n.depth+1;
@@ -94,7 +122,7 @@ public class HiddenMCTSSolution extends Agent {
 		{
 			int randInt = rand.nextInt(validMoves.size());
 			try {
-				newG = newG.simulateMove(newG.board, validMoves.get(randInt));
+				newG = newG.hiddenInfoSimulateMove(newG.board, validMoves.get(randInt));
 			}
 			catch (Exception e)
 			{
@@ -113,7 +141,8 @@ public class HiddenMCTSSolution extends Agent {
 	{
 		while(n != null)
 		{
-			n.score += score;
+			if (score != -1) // ignoring losses for now
+				n.score += score;
 			n.simulations++;
 			n = n.parent;
 		}
@@ -121,6 +150,8 @@ public class HiddenMCTSSolution extends Agent {
 	
 	private Node bestRootMove()
 	{
+		if (root.children == null )
+			return root;
 		double bestAvgScore = -1;
 		Node bestChild = null;
 		for (Node child : root.children)

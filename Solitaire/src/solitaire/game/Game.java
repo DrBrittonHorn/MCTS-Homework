@@ -61,8 +61,8 @@ public final class Game {
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
 //		setupGame();
-		//setupTestGame();
-		setupTestEasyWinGame();
+		setupTestGame();
+		//setupTestEasyWinGame();
 		//setupInterimGame();
 		
 		/*
@@ -500,7 +500,7 @@ public final class Game {
 		{
 			if (move.getToPosition().isDeck())
 			{
-				System.out.println("Got to second if: "+deck.size());
+				//System.out.println("Got to second if: "+deck.size());
 				if (deckFlips >= maxDeckFlips && deck.size() == 0)
 				{
 					System.out.println("Max deck flips reached");
@@ -510,7 +510,7 @@ public final class Game {
 					flipDeck();
 				else
 					resetDeck();
-				System.out.println(deck.size());
+				//System.out.println(deck.size());
 				return;
 			}
 			else // clicked on unflipped tab
@@ -768,8 +768,8 @@ public final class Game {
 		allCards.removeAll(foundation1);
 		allCards.removeAll(foundation2);
 		allCards.removeAll(foundation3);
-		System.out.println("Unseen cards: ");
-		for(Card c: allCards) System.out.println(c.toString());
+//		System.out.println("Unseen cards: ");
+//		for(Card c: allCards) System.out.println(c.toString());
 		return allCards.get(rand.nextInt(allCards.size()));
 	}
 	
@@ -1061,10 +1061,12 @@ public final class Game {
 		if (from != null && from.getPiece() != null
 				&& fromCard.rank != 13
 				&& to != null && to.getX() >= 0 
+				&& !board.get(to.getX() * boardHeight).getPiece().equals(hiddenPiece)
 				&& board.get(to.getX() * boardHeight).getPiece().getCard() == null)
 		{
 			return false;
 		}
+
 		if(from != null && to != null && fromCard!= null) {
 			if(to.getPiece().getCard()!=null && !to.isFoundation()) {
 				Suit fromSuit = fromCard.suit;
@@ -1187,13 +1189,13 @@ public final class Game {
 			allCards.removeAll(foundation1);
 			allCards.removeAll(foundation2);
 			allCards.removeAll(foundation3);
-			System.out.println("Unseen cards: ");
-			for(Card c: allCards) System.out.println(c.toString());
+//			System.out.println("Unseen cards: ");
+//			for(Card c: allCards) System.out.println(c.toString());
 			newCard = allCards.get(rand.nextInt(allCards.size()));
 			move.getToPosition().setPiece(new GamePiece(false, 0, newCard));
 		}
 		g.advanceGame(move);
-		g.printGame();
+		//g.printGame();
 		return g;
 	}
 	public Card getTopFoundationCard(int foundationNum)

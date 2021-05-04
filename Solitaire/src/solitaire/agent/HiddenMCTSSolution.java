@@ -63,7 +63,7 @@ public class HiddenMCTSSolution extends Agent {
 			n = expansion(n);
 //			System.out.print("Expanding node:");
 //			n.printNode();
-			int score = simulate(n);
+			double score = simulate(n);
 			backpropagate(n, score);
 			if (n.parent.simulations == n.parent.children.size())
 				n.parent.isFullyExpanded = true;
@@ -114,7 +114,7 @@ public class HiddenMCTSSolution extends Agent {
 		return null;
 	}
 	
-	private int simulate(Node n)
+	private double simulate(Node n)
 	{
 		List<Move> validMoves = n.state.getValidMoves(n.state.board, 1);
 		Game newG = n.state;
@@ -134,10 +134,11 @@ public class HiddenMCTSSolution extends Agent {
 			validMoves = newG.getValidMoves(newG.board, 1);
 		}
 		
-		return newG.isWinningBoard(newG.board);
+		return newG.getBoardScore(newG.board);
+		//return newG.isWinningBoard(newG.board);
 	}
 	
-	private void backpropagate(Node n, int score)
+	private void backpropagate(Node n, double score)
 	{
 		while(n != null)
 		{
@@ -207,7 +208,7 @@ public class HiddenMCTSSolution extends Agent {
 			// calculate uct
 			// uct = (w_i / s_i) + (C * sqrt(log(S)/s_i))
 			return (this.score / (double) this.simulations) + 
-					(2 * Math.sqrt( // added C_p parameter since score is outside [0,1]
+					(2 * 100 * Math.sqrt( // added C_p parameter since score is outside [0,1]
 							Math.log(this.parent.simulations) / (double) this.simulations)
 							);
 		}

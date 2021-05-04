@@ -819,7 +819,7 @@ public final class Game {
 		return 0;
 	}
 	
-	public float getBoardScore(List<Position> origBoard)
+	public double getBoardScore(List<Position> origBoard)
 	{
 		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()) + ((maxPlays-playsMade)/ (float) 16);
 	}

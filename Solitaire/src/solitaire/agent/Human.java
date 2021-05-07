@@ -15,7 +15,6 @@ public class Human extends Agent{
 	@Override
 	public Move getMove(Game game, long timeDue) {
 		responded = false;
-		System.out.println("hELLO");
 		game.hiddenInfoSimulateMove(game.getBoard(), new Move(null, 
 				new Position(1, 0, game.hiddenPiece, false, false, false, -1)));
 		for (Move move : game.getValidMoves(game.board, 0))

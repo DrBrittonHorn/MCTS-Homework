@@ -21,6 +21,7 @@ public class Executor {
 		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
 //		exec.runGame(new MCTSSolution());
+// 		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
 	}
 	

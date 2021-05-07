@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import solitaire.agent.Agent;
+import solitaire.agent.HiddenMCTSSolution;
 import solitaire.agent.Human;
 import solitaire.agent.MCTSSolution;
 import solitaire.agent.RandomAgent;
@@ -18,10 +19,10 @@ public class Executor {
 	
 	public static void main(String[] args) {
 		Executor exec = new Executor();
-		exec.runGame(new Human());
+//		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
 //		exec.runGame(new MCTSSolution());
-// 		exec.runGame(new HiddenMCTSSolution());
+		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
 	}
 	

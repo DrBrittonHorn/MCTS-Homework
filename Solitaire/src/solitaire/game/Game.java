@@ -62,7 +62,7 @@ public final class Game {
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
 //		setupGame();
-		//setupTestGame();
+//		setupTestGame();
 //		setupTestEasyWinGame();
 		setupInterimGame();
 		
@@ -347,7 +347,7 @@ public final class Game {
 		
 		
 		
-		playsMade = 50;
+		playsMade = 55;
 
 	}
 	
@@ -383,9 +383,13 @@ public final class Game {
 		{
 			for (int stackHeight = tab; stackHeight < 7; stackHeight++)
 			{
-				ret.board.get((stackHeight * boardHeight) + tab).setPiece(tab == stackHeight ? 
-						new GamePiece(true, 1, board.get((stackHeight * boardHeight) + tab).getPiece().getCard()) : 
-							hiddenPiece);
+				Position p = board.get((stackHeight * boardHeight) + tab);
+				if (!p.getPiece().equals(nullPiece))
+				{
+					ret.board.get((stackHeight * boardHeight) + tab).setPiece(tab == stackHeight || p.getPiece().isFlipped() ? 
+							new GamePiece(true, 1, p.getPiece().getCard()) : 
+								hiddenPiece);
+				}
 			}
 		}
 		
@@ -612,9 +616,13 @@ public final class Game {
 			{
 				Position lastCard = getLastFlippedCardInTab(move.getToPosition().getX());
 				if (lastCard != null)
+				{
 					board.get((lastCard.getX() * boardHeight) + lastCard.getY() + 1).setPiece(new GamePiece(true, 1, oldCard));
+				}
 				else // empty tab
+				{
 					board.get((move.getToPosition().getX() * boardHeight)).setPiece(new GamePiece(true, 1, oldCard));
+				}
 				waste.remove(waste.size()-1);
 				lastFlipCount--;
 				return;
@@ -979,7 +987,7 @@ public final class Game {
 				}
 				if (toPos.getPiece().getCard() == null) // blank tab
 				{
-					if(fromRank == 13) {
+					if(fromRank == 13 && (fromPos.getY() > 0 || fromPos.isWaste())) {
 						//System.out.println("I'm here!");
 						if(board.get(toPos.getX()*boardHeight).getPiece().getCard() == null) {
 							validMoves.add(new Move(fromPos, board.get(toPos.getX()*boardHeight)));
@@ -990,7 +998,7 @@ public final class Game {
 				int toRank = toPos.getPiece().getCard().rank;
 				Suit toSuit = toPos.getPiece().getCard().suit;
 				
-				if(toRank - fromRank == 1) {
+				if(toRank - fromRank == 1 && !(fromRank == 1 && fromPos.isFoundation())) {
 					if((fromSuit == Suit.HEART || fromSuit == Suit.DIAMOND) &&
 							(toSuit == Suit.SPADE || toSuit == Suit.CLUB)) {
 						if(fromPos.getX() != toPos.getX()) {
@@ -1069,6 +1077,15 @@ public final class Game {
 		{
 			return false;
 		}
+		/*if (from != null && from.getPiece() != null
+				&& fromCard.rank == 13
+				&& to != null && to.getX() >= 0
+				&& !board.get(to.getX() * boardHeight).getPiece().equals(hiddenPiece)
+				&& board.get(to.getX() * boardHeight).getPiece().getCard() == null
+				&& from.getY() == 0)
+		{
+			return false;
+		}*/
 
 		if(from != null && to != null && fromCard!= null) {
 			if(to.getPiece().getCard()!=null && !to.isFoundation()) {

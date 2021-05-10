@@ -439,6 +439,58 @@ public class MCTSSolution extends Agent {
 	}
 	
 	
+	private void printTreeStatistics(Node root) {
+		// Find depth
+		getMaxDepth(root, 0);
+		// Find branching factor
+		getBranchingFactor(root);
+		// Find number of nodes
+	}
+	
+	private int getMaxDepth(Node node, int max) {
+		if(node.children == null) 
+			return Math.max(node.depth, max);
+		else {
+			for(Node c: node.children) {
+				getMaxDepth(c, c.depth);
+			}
+		}
+		return max;
+	}
+	
+	/*
+	 * The average branching factor can be quickly calculated as the number of non-root nodes 
+	 * (the size of the tree, minus one; or the number of edges) divided by the number of non-leaf nodes 
+	 * (the number of nodes with children).
+	 */
+	private double getBranchingFactor(Node root) {
+		int nonLeafNodes = nonLeafNodes(root);
+		int nonRootNodes = numNodes(root)-1;
+		return nonRootNodes/(double)nonLeafNodes;	
+	}
+	
+	private int nonLeafNodes(Node node) {
+		int num = 1;
+		boolean notLeaf = true;
+		for(Node c: node.children) {
+			if(c.children!=null) {
+				num += nonLeafNodes(c);
+			}
+		}
+		return 1;
+	}
+	
+	private int numNodes(Node node) {
+		int num = 1;
+		if(node.children != null) {
+			for(Node c: node.children) {
+				num += numNodes(c);
+			}
+		}
+		return num;
+	}
+	
+	
 	/*
 	 * Node class
 	 * Tracks visited, expanded, terminal, board state, parent/children, winner/wins/simulations, move to get here

@@ -40,6 +40,7 @@ public class Executor implements Runnable{
 		ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
         for (int i = 0; i < times; i++) {
             Runnable worker = new Executor(MCTSSolution.class);
+//            Runnable worker = new Executor(HiddenMCTSSolution.class);
             executor.execute(worker);
             allTasks.add(worker);
         }
@@ -201,8 +202,13 @@ public class Executor implements Runnable{
 		Agent agent1;
 		if (agentType.equals(MCTSSolution.class))
 		{
-			System.out.println("Equal!");
+			System.out.println("MCTSSolution!");
 			agent1 = new MCTSSolution();
+		}
+		else if (agentType.equals(HiddenMCTSSolution.class))
+		{
+			System.out.println("HiddenMCTS!");
+			agent1 = new HiddenMCTSSolution();
 		}
 		else
 		{

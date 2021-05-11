@@ -33,12 +33,12 @@ public class MCTSSolution extends Agent {
 		}
 		root.depth = 0;
 		
-		System.out.println("starting MCTS -- original board:******");
-		root.boardState.printGame();
-		System.out.println("**************************************");
+//		System.out.println("starting MCTS -- original board:******");
+//		root.boardState.printGame();
+//		System.out.println("**************************************");
 		List<Move> valid = game.getValidMoves(game.board, game.turn);
-		for (Move m : valid)
-			System.out.println(m.toString());
+//		for (Move m : valid)
+//			System.out.println(m.toString());
 		//if (valid.size() == 1) return valid.get(0);
 		
 		// here's where the magic happens
@@ -96,17 +96,17 @@ public class MCTSSolution extends Agent {
 		DateFormat format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS"); 
 		long startTime = System.currentTimeMillis();
         Date startDate = new Date(startTime); 
-		System.out.println("start time: " + format.format(startDate));
+//		System.out.println("start time: " + format.format(startDate));
 		long timeDue = System.currentTimeMillis() + timeLimit;
         Date timeDueDate = new Date(timeDue); 
-		System.out.println("time due: " + format.format(timeDueDate));
+		System.out.println("move: " + game.playsMade + ", start time: " + format.format(startDate) + ", time due: " + format.format(timeDueDate));
 		
 		// start from root
 		Node node = root;
 		int iterationCount = 0;
 		// stop in timeDue milliseconds or after 10 million iterations
-		while (System.currentTimeMillis() < timeDue && iterationCount++ < 10000)
-		{
+		while (System.currentTimeMillis() < timeDue) {// && iterationCount < 10000)
+			++iterationCount;
 			/*for (Node child : root.children)
 			{
 				child.printNode();
@@ -135,7 +135,7 @@ public class MCTSSolution extends Agent {
 		System.out.println("iteration count: " + (iterationCount-1));
 		long endTime = System.currentTimeMillis();
         Date endDate = new Date(endTime); 
-		System.out.println("time end: " + format.format(endDate));
+//		System.out.println("time end: " + format.format(endDate));
 		// add stop here
 	}
 	
@@ -404,7 +404,7 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			child.printNodeStats();
+//			child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore)
 			{

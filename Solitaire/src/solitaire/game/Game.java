@@ -15,7 +15,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 60, deckFlips = 0, maxDeckFlips = 2;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 30, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
@@ -61,10 +61,10 @@ public final class Game {
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 2));
 		board.add(new Position(-1, -1, nullPiece, false, false, true, 3));
 		
-//		setupGame();
+		setupGame();
 //		setupTestGame();
 //		setupTestEasyWinGame();
-		setupInterimGame();
+//		setupInterimGame();
 		
 		/*
 		// for testing purposes only
@@ -74,7 +74,7 @@ public final class Game {
 			deck.remove(0);
 		}
 		*/
-		FullSolitaireTree tree = new FullSolitaireTree();
+//		FullSolitaireTree tree = new FullSolitaireTree();
 //		tree.buildFullTree(this);
 	}
 	

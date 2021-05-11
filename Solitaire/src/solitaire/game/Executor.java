@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import solitaire.agent.Agent;
 import solitaire.agent.HiddenMCTSSolution;
@@ -23,6 +24,7 @@ public class Executor implements Runnable{
 	private Class agentType;
 	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
 	private static final int times = 5;
+	private int finalscore;
 	
 	public static void main(String[] args) throws InterruptedException {
 //		Executor exec = new Executor();
@@ -32,11 +34,14 @@ public class Executor implements Runnable{
 //		exec.runHeadlessGame(new MCTSSolution(), 5);
 //		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
+		List<Runnable> allTasks = new ArrayList<Runnable>();
 		
+		int totalScore = 0;
 		ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
         for (int i = 0; i < times; i++) {
             Runnable worker = new Executor(MCTSSolution.class);
             executor.execute(worker);
+            allTasks.add(worker);
         }
         // This will make the executor accept no new threads
         // and finish all existing threads in the queue
@@ -44,6 +49,12 @@ public class Executor implements Runnable{
         // Wait until all threads are finish
         executor.awaitTermination(10000000L, TimeUnit.MILLISECONDS);
         System.out.println("Finished all threads");
+        for (Runnable r : allTasks)
+        {
+        	System.out.println("score: " + ((Executor)r).getScore());
+        	totalScore += ((Executor)r).getScore();
+        }
+        System.out.println("Avg: " + (totalScore/(double)times));
 	}
 	
 	Executor(Class agentType) {
@@ -217,6 +228,12 @@ public class Executor implements Runnable{
 		}
 		System.out.println("GAME FINISHED RUNNING");
 		game.printGame();
+		this.finalscore = game.getNumberOfCardsInFoundation();
+	}
+	
+	public int getScore()
+	{
+		return finalscore;
 	}
 
 }

@@ -835,6 +835,11 @@ public final class Game {
 		return 5*(foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size()) + ((maxPlays-playsMade)/ (float) 16);
 	}
 	
+	public int getNumberOfCardsInFoundation()
+	{
+		return foundation0.size() + foundation1.size() + foundation2.size() + foundation3.size();
+	}
+	
 	public boolean gameOver()
 	{
 		if (getValidMoves(board, turn).size() == 0)

@@ -4,8 +4,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
 import solitaire.game.Game;
 import solitaire.game.Move;
 
@@ -13,6 +15,7 @@ public class HiddenMCTSSolution extends Agent {
 	private Game game = null;
 	private static final Random rand = new Random();
 	Node root = null;
+	private static int nextID = 0;
 	
 	@Override
 	public Move getMove(Game game, long timeDue) {
@@ -20,6 +23,7 @@ public class HiddenMCTSSolution extends Agent {
 		this.game = game;
 		if (root == null)
 		{
+			nextID = 0;
 			root = new Node();
 			root.state = game;
 		}
@@ -32,7 +36,7 @@ public class HiddenMCTSSolution extends Agent {
 		performMCTS(timeDue);
 		
 		Node ret = bestRootMove();
-		//printTree(root);
+//		printTree(root);
 		if (ret == null)
 		{
 			System.out.println("Returning null from MCTS");
@@ -40,7 +44,38 @@ public class HiddenMCTSSolution extends Agent {
 		}
 		System.out.println("*********** Finished MCTS *************");
 		root = null;
+		System.out.println("Returning move: " + ret.moveToGetHere);
 		return ret.moveToGetHere;
+	}
+	
+	private void printTree(Node root)
+	{
+		LinkedList<Node> q = new LinkedList<Node>();
+		Node rover = null;
+		int depth = root.depth;
+		q.add(root);
+		while (!q.isEmpty())
+		{
+			rover = q.remove();
+			//rover.printNode();
+			if (rover.depth > depth)
+			{
+				depth = rover.depth;
+				System.out.println("*********************** LEVEL " + depth + " *********************");
+			}
+			System.out.println("id: " + rover.id + ", parent: " + 
+					(rover.parent == null ? " " : rover.parent.id) + ", move to get here: " + rover.moveToGetHere + "isTerminal: " + rover.isTerminal);
+			//rover.printNode(););
+			if (rover.children != null)
+			{
+				for (Node child : rover.children)
+				{
+					if (child.simulations > 0)
+						q.add(child);
+				}
+			}
+		}
+		
 	}
 	
 	private void performMCTS(long timeLimit)
@@ -57,23 +92,34 @@ public class HiddenMCTSSolution extends Agent {
 		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
 		{
 			System.out.println("New MCTS iteration: " + iters);
+//			printTree(root);
 			Node n = selection();
-//			System.out.print("Selected Node:");
+//			System.out.println("Selected Node:");
 //			n.printNode();
 			n = expansion(n);
-//			System.out.print("Expanding node:");
+//			System.out.println("After Expansion node:");
 //			n.printNode();
 			double score = simulate(n);
 			backpropagate(n, score);
-			if (n.parent.simulations == n.parent.children.size())
+			
+//			if(n.parent != null)
+//			{
+//				System.out.println("parent: " + n.parent.id + " sim: " + n.parent.simulations + ", child#: " + n.parent.children.size());
+//			}
+			if ((n.parent.id == 0 && n.parent.simulations == n.parent.children.size()) ||
+					(n.parent.id > 0 && n.parent.simulations > n.parent.children.size())
+					)
+			{
+//				System.out.println("parent fully expanded!");
 				n.parent.isFullyExpanded = true;
+			}
 		}
 	}
 	
 	private Node selection()
 	{
 		Node chosen = root;
-		while (chosen.isFullyExpanded)
+		while (chosen.isFullyExpanded && !chosen.isTerminal)
 		{
 			chosen = chosen.bestUCT();
 		}
@@ -82,6 +128,9 @@ public class HiddenMCTSSolution extends Agent {
 	
 	private Node expansion(Node n)
 	{
+		if (n.isTerminal) return n;
+//		System.out.println("Expanding node: **********************************");
+//		n.state.printGame();
 		if (n.children == null)
 		{
 			n.children = new ArrayList<Node>();
@@ -99,6 +148,7 @@ public class HiddenMCTSSolution extends Agent {
 						child.state.maxPlays <= child.state.playsMade)
 				{
 					child.isFullyExpanded = true;
+					child.isTerminal = true;
 				}
 				
 				// add child to parent's list
@@ -110,6 +160,7 @@ public class HiddenMCTSSolution extends Agent {
 			if (c.simulations == 0)
 				return c;
 		}
+		
 		System.out.println("This should be a fully expanded node");
 		return null;
 	}
@@ -180,6 +231,8 @@ public class HiddenMCTSSolution extends Agent {
 		int simulations;
 		int score;
 		boolean isFullyExpanded;
+		boolean isTerminal;
+		int id = nextID++;
 		
 		public Node bestUCT()
 		{

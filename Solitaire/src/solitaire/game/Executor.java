@@ -22,8 +22,9 @@ public class Executor implements Runnable{
 	private long runTime = 2000;
 	private long timeBuffer = 1000;
 	private Class agentType;
-	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
-	private static final int times = 5;
+//	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
+	private static final int NTHREDS = 1;
+	private static final int times = NTHREDS;
 	private int finalscore;
 	
 	public static void main(String[] args) throws InterruptedException {
@@ -39,8 +40,8 @@ public class Executor implements Runnable{
 		int totalScore = 0;
 		ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
         for (int i = 0; i < times; i++) {
-            Runnable worker = new Executor(MCTSSolution.class);
-//            Runnable worker = new Executor(HiddenMCTSSolution.class);
+//            Runnable worker = new Executor(MCTSSolution.class);
+            Runnable worker = new Executor(HiddenMCTSSolution.class);
             executor.execute(worker);
             allTasks.add(worker);
         }
@@ -200,6 +201,8 @@ public class Executor implements Runnable{
 	public void run()
 	{
 		Agent agent1;
+		Game game = new Game();
+
 		if (agentType.equals(MCTSSolution.class))
 		{
 			System.out.println("MCTSSolution!");
@@ -215,7 +218,7 @@ public class Executor implements Runnable{
 			System.out.println("Class mismatch. Ending.");
 			return;
 		}
-		Game game = new Game();
+		
 		game.printDeck(game.deck);
 		game.printBoardText(game.board);
 		long start = System.currentTimeMillis();
@@ -224,11 +227,18 @@ public class Executor implements Runnable{
 			if (agent1.responded)
 			{
 				//System.out.println("Human responded");
-				game.advanceGame(agent1.getMove(game, runTime));
+				if (agentType.equals(MCTSSolution.class))
+					game.advanceGame(agent1.getMove(game, runTime));
+				else if (agentType.equals(HiddenMCTSSolution.class))
+					game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
+				else
+					game.advanceGame(agent1.getMove(game, runTime));
 				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
 				{
 					System.out.println("Agent 1 took too long to respond");
 				}
+				System.out.println("After play game: ");
+				game.printGame();
 				start = System.currentTimeMillis();
 			}
 		}

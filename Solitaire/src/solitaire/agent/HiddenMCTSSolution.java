@@ -136,6 +136,11 @@ public class HiddenMCTSSolution extends Agent {
 			n.children = new ArrayList<Node>();
 			for (Move mv : n.state.getValidMoves(n.state.board, 1))
 			{
+				if(mv.getToPosition() == null) { // i think this is chance state
+					Chance child = new Chance();
+					child.parent = n;
+					child.createChanceChild();
+				}
 				//System.out.println("Making new child: " + mv);
 				Node child = new Node();
 				child.moveToGetHere = mv;
@@ -285,4 +290,31 @@ public class HiddenMCTSSolution extends Agent {
 	
 	}
 
+	private class Chance extends Node {
+		final boolean chance = true;
+		List<Node> chanceChildren;
+		
+		//this is probably not right even a little bit
+		
+		public void createChanceChild() {
+			Game g = game.hiddenInfoSimulateMove(this.state.board, this.moveToGetHere);
+			boolean hasBeenSeen = true;
+			while(hasBeenSeen == true) {
+				g = game.hiddenInfoSimulateMove(this.state.board, this.moveToGetHere);
+				hasBeenSeen = false;
+				for(Node node: chanceChildren) {
+					if(node.state == g) hasBeenSeen = true;
+				}
+			}
+			Node chanceChild = new Node();
+			chanceChild.state = g;
+			chanceChild.depth = this.depth;
+			chanceChild.moveToGetHere = this.moveToGetHere;
+			chanceChild.parent = this.parent;
+			chanceChild.simulations = 0;
+			chanceChild.score = 0;
+			chanceChild.isFullyExpanded = false;
+			chanceChildren.add(chanceChild);
+		}
+	}
 }

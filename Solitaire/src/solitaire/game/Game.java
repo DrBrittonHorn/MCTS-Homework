@@ -868,7 +868,13 @@ public final class Game {
 	
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
+		boolean testing = true;
 		List<Move> validMoves = new ArrayList<Move>();
+		if (testing) {
+			if (!(deck.size() == 0 && deckFlips >= maxDeckFlips))
+				validMoves.add(new Move(null,board.get(deckPos)));
+			return validMoves;
+		}
 		Set<Position> toCards = new HashSet<Position>();
 		Set<Position> fromCards = new HashSet<Position>();
 		//Add tabular cards
@@ -1398,5 +1404,25 @@ public final class Game {
 		g.playsMade = this.playsMade;
 		
 		return g;
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (!(o instanceof Game)) return false;
+		Game g = (Game) o;
+		return this.gameOver == g.gameOver
+				&& this.isSingleFlip == g.isSingleFlip
+				&& this.deckFlips == g.deckFlips
+				&& this.lastFlipCount == g.lastFlipCount
+				&& this.playsMade == g.playsMade
+				&& this.board.equals(g.board)
+				&& this.deck.equals(g.deck)
+				&& this.waste.equals(g.waste)
+				&& this.foundation0.equals(g.foundation0)
+				&& this.foundation1.equals(g.foundation1)
+				&& this.foundation2.equals(g.foundation2)
+				&& this.foundation3.equals(g.foundation3);
 	}
 }

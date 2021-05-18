@@ -92,10 +92,10 @@ public class HiddenMCTSSolution extends Agent {
 		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
 		{
 			System.out.println("New MCTS iteration: " + iters);
-//			printTree(root);
+			printTree(root);
 			Node n = selection();
-//			System.out.println("Selected Node:");
-//			n.printNode();
+			System.out.println("Selected Node:");
+			n.printNode();
 			n = expansion(n);
 //			System.out.println("After Expansion node:");
 //			n.printNode();
@@ -121,7 +121,14 @@ public class HiddenMCTSSolution extends Agent {
 		Node chosen = root;
 		while (chosen.isFullyExpanded && !chosen.isTerminal)
 		{
-			chosen = chosen.bestUCT();
+			if (chosen instanceof ChanceNode)
+			{
+				chosen = ((ChanceNode) chosen).createChanceChild();
+			}
+			else
+			{
+				chosen = chosen.bestUCT();
+			}
 		}
 		return chosen;
 	}
@@ -136,37 +143,56 @@ public class HiddenMCTSSolution extends Agent {
 			n.children = new ArrayList<Node>();
 			for (Move mv : n.state.getValidMoves(n.state.board, 1))
 			{
-				if(mv.getToPosition() == null) { // i think this is chance state
-					Chance child = new Chance();
+				// add exclusion cases:
+				// Resetting deck, already been through deck once
+				if((mv.getToPosition().isDeck()  && n.state.deckFlips == 0 && n.state.deck.size() != 0) 
+						|| (mv.getToPosition().getX() >= 0 && mv.getFromPosition() == null)){
+					ChanceNode child = new ChanceNode();
 					child.parent = n;
-					child.createChanceChild();
-				}
-				//System.out.println("Making new child: " + mv);
-				Node child = new Node();
-				child.moveToGetHere = mv;
-				child.depth = n.depth+1;
-				child.parent = n;
-				child.state = n.state.hiddenInfoSimulateMove(n.state.board, mv);
-				
-				if (child.state.isWinningBoard(child.state.board) != 0 || 
-						child.state.getValidMoves(child.state.board, 1).isEmpty() ||
-						child.state.maxPlays <= child.state.playsMade)
-				{
+					child.depth = n.depth + 1;
+					child.moveToGetHere = mv;
+					child.state = n.state;
 					child.isFullyExpanded = true;
-					child.isTerminal = true;
+					child.isTerminal = false;
+					//child.createChanceChild();
+					
+					n.children.add(child);
 				}
-				
-				// add child to parent's list
-				n.children.add(child);
+				else 
+				{
+					//System.out.println("Making new child: " + mv);
+					Node child = new Node();
+					child.moveToGetHere = mv;
+					child.depth = n.depth+1;
+					child.parent = n;
+					child.state = n.state.hiddenInfoSimulateMove(n.state.board, mv);
+					if (child.state.isWinningBoard(child.state.board) != 0 || 
+							child.state.getValidMoves(child.state.board, 1).isEmpty() ||
+							child.state.maxPlays <= child.state.playsMade)
+					{
+						child.isFullyExpanded = true;
+						child.isTerminal = true;
+					}
+					
+					// add child to parent's list
+					n.children.add(child);
+				}
 			}
 		}
 		for (Node c : n.children)
 		{
 			if (c.simulations == 0)
+			{
+				if (c instanceof ChanceNode)
+				{
+					c = ((ChanceNode) c).createChanceChild();
+				}
 				return c;
+			}
 		}
 		
-		System.out.println("This should be a fully expanded node");
+		System.out.println("This should be a fully expanded node: isChance -- " + (n instanceof ChanceNode));
+		n.printNode();
 		return null;
 	}
 	
@@ -275,7 +301,8 @@ public class HiddenMCTSSolution extends Agent {
 		{
 			System.out.println("===== Node Begin =====");
 			state.printGame();
-			System.out.println("score: " + this.score + ", simulations: " + this.simulations + ", uct: " + this.uct() +
+			System.out.println("id: " + this.id + ", score: " + this.score + ", simulations: " + this.simulations + ", uct: " + this.uct() +
+					", isFullyExpanded: " + this.isFullyExpanded + ", isTerminal: " + this.isTerminal + 
 					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
 					: "null"));
 			System.out.println("===== Node End =====");
@@ -287,34 +314,51 @@ public class HiddenMCTSSolution extends Agent {
 					", moveToGetHere: " + ((this.moveToGetHere != null) ? moveToGetHere.toString() 
 					: "null"));
 		}
+		
+		public boolean equals(Object o)
+		{
+			if (this == o) return true;
+			if (! (o instanceof Node)) return false;
+			if (o instanceof ChanceNode && !(this instanceof ChanceNode)) return false;
+			if (this instanceof ChanceNode && !(o instanceof ChanceNode)) return false;
+			
+			Node n = (Node) o;
+			return n.state.equals(this.state);
+		}
 	
 	}
 
-	private class Chance extends Node {
+	private class ChanceNode extends Node {
 		final boolean chance = true;
-		List<Node> chanceChildren;
+		//List<Node> chanceChildren;
 		
 		//this is probably not right even a little bit
 		
-		public void createChanceChild() {
-			Game g = game.hiddenInfoSimulateMove(this.state.board, this.moveToGetHere);
-			boolean hasBeenSeen = true;
-			while(hasBeenSeen == true) {
-				g = game.hiddenInfoSimulateMove(this.state.board, this.moveToGetHere);
-				hasBeenSeen = false;
-				for(Node node: chanceChildren) {
-					if(node.state == g) hasBeenSeen = true;
-				}
+		public Node createChanceChild() {
+			Game g = this.state.hiddenInfoSimulateMove(this.state.board, this.moveToGetHere);
+			Node child = new Node();
+			child.depth = this.depth + 1;
+			child.state = g;
+			child.moveToGetHere = this.moveToGetHere;
+			child.parent = this;
+			child.simulations = 0;
+			child.score = 0;
+			
+			if (child.state.isWinningBoard(child.state.board) != 0 || 
+					child.state.getValidMoves(child.state.board, 1).isEmpty() ||
+					child.state.maxPlays <= child.state.playsMade)
+			{
+				child.isFullyExpanded = true;
+				child.isTerminal = true;
 			}
-			Node chanceChild = new Node();
-			chanceChild.state = g;
-			chanceChild.depth = this.depth;
-			chanceChild.moveToGetHere = this.moveToGetHere;
-			chanceChild.parent = this.parent;
-			chanceChild.simulations = 0;
-			chanceChild.score = 0;
-			chanceChild.isFullyExpanded = false;
-			chanceChildren.add(chanceChild);
+			
+			if (children == null)
+				children = new ArrayList<Node>();
+			if (!children.contains(child))
+			{
+				children.add(child);
+			}
+			return child;
 		}
 	}
 }

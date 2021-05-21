@@ -386,7 +386,7 @@ public final class Game {
 				Position p = board.get((stackHeight * boardHeight) + tab);
 				if (!p.getPiece().equals(nullPiece))
 				{
-					ret.board.get((stackHeight * boardHeight) + tab).setPiece(tab == stackHeight || p.getPiece().isFlipped() ? 
+					ret.board.get((stackHeight * boardHeight) + tab).setPiece(/*tab == stackHeight || */p.getPiece().isFlipped() ? 
 							new GamePiece(true, 1, p.getPiece().getCard()) : 
 								hiddenPiece);
 				}

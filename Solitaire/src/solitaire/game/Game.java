@@ -358,6 +358,8 @@ public final class Game {
 	
 	public Game createHiddenInfoVersion()
 	{
+//		System.out.println("&&&& creating hidden info version &&&&");
+//		this.printGame();
 		Game ret = new Game(true);
 		
 		ret.board = new ArrayList<Position>();
@@ -381,12 +383,12 @@ public final class Game {
 		// fill tabs (only flipped card is known)
 		for (int tab = 0; tab < boardWidth; tab++)
 		{
-			for (int stackHeight = tab; stackHeight < 7; stackHeight++)
+			for (int stackHeight = 0; stackHeight < boardHeight; stackHeight++)
 			{
-				Position p = board.get((stackHeight * boardHeight) + tab);
+				Position p = board.get((tab * boardHeight) + stackHeight);
 				if (!p.getPiece().equals(nullPiece))
 				{
-					ret.board.get((stackHeight * boardHeight) + tab).setPiece(/*tab == stackHeight || */p.getPiece().isFlipped() ? 
+					ret.board.get((tab * boardHeight) + stackHeight).setPiece(/*tab == stackHeight || */p.getPiece().isFlipped() ? 
 							new GamePiece(true, 1, p.getPiece().getCard()) : 
 								hiddenPiece);
 				}

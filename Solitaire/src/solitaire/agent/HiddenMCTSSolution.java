@@ -28,11 +28,11 @@ public class HiddenMCTSSolution extends Agent {
 			root.state = game;
 		}
 		root.depth = 0;
-		/*for (Move m : root.state.getValidMoves(root.state.board, 1))
+		for (Move m : root.state.getValidMoves(root.state.board, 1))
 		{
 			System.out.println(m.toString());
-			root.state.hiddenInfoSimulateMove(root.state.board, m);
-		}*/
+			//root.state.hiddenInfoSimulateMove(root.state.board, m);
+		}
 		performMCTS(timeDue);
 		
 		Node ret = bestRootMove();
@@ -91,11 +91,11 @@ public class HiddenMCTSSolution extends Agent {
 		int iters = 0, maxIter = 100000;
 		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
 		{
-			System.out.println("New MCTS iteration: " + iters);
-			printTree(root);
+			//System.out.println("New MCTS iteration: " + iters);
+			//printTree(root);
 			Node n = selection();
-			System.out.println("Selected Node:");
-			n.printNode();
+			//System.out.println("Selected Node:");
+			//n.printNode();
 			n = expansion(n);
 //			System.out.println("After Expansion node:");
 //			n.printNode();
@@ -106,12 +106,25 @@ public class HiddenMCTSSolution extends Agent {
 //			{
 //				System.out.println("parent: " + n.parent.id + " sim: " + n.parent.simulations + ", child#: " + n.parent.children.size());
 //			}
-			if ((n.parent.id == 0 && n.parent.simulations == n.parent.children.size()) ||
-					(n.parent.id > 0 && n.parent.simulations > n.parent.children.size())
-					)
+			if (n.parent instanceof ChanceNode)
 			{
-//				System.out.println("parent fully expanded!");
-				n.parent.isFullyExpanded = true;
+				if ((n.parent.parent.id == 0 && n.parent.parent.simulations == n.parent.parent.children.size()) ||
+						(n.parent.parent.id > 0 && n.parent.parent.simulations > n.parent.parent.children.size())
+						)
+				{
+	//				System.out.println("parent fully expanded!");
+					n.parent.parent.isFullyExpanded = true;
+				}
+			}
+			else
+			{
+				if ((n.parent.id == 0 && n.parent.simulations == n.parent.children.size()) ||
+						(n.parent.id > 0 && n.parent.simulations > n.parent.children.size())
+						)
+				{
+	//				System.out.println("parent fully expanded!");
+					n.parent.isFullyExpanded = true;
+				}
 			}
 		}
 	}

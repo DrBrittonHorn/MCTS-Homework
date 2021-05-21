@@ -19,7 +19,7 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor implements Runnable{
-	private long runTime = 2000;
+	private long runTime = 4000;
 	private long timeBuffer = 1000;
 	private Class agentType;
 //	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
@@ -28,13 +28,18 @@ public class Executor implements Runnable{
 	private int finalscore;
 	
 	public static void main(String[] args) throws InterruptedException {
-//		Executor exec = new Executor();
+		Executor exec = new Executor();
 //		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
 //		exec.runGame(new MCTSSolution());
 //		exec.runHeadlessGame(new MCTSSolution(), 5);
-//		exec.runGame(new HiddenMCTSSolution());
+		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
+//		runThreaded();
+	}
+	
+	private static void runThreaded() throws InterruptedException
+	{
 		List<Runnable> allTasks = new ArrayList<Runnable>();
 		
 		int totalScore = 0;
@@ -152,7 +157,7 @@ public class Executor implements Runnable{
 			}
 		}
 		try {
-			Thread.sleep(100);
+			Thread.sleep(10000);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

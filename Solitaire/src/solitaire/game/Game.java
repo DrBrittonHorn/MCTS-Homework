@@ -15,17 +15,17 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 30, deckFlips = 0, maxDeckFlips = 2;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 50, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);
 	// flipped cards
 	public List<Card> waste = new ArrayList<Card>(24);
 	// cards placed at top. Goes from Ace to K for each suit
-	public List<Card> foundation2 = new ArrayList<Card>(13);
 	public List<Card> foundation0 = new ArrayList<Card>(13);
-	public List<Card> foundation3 = new ArrayList<Card>(13);
 	public List<Card> foundation1 = new ArrayList<Card>(13);
+	public List<Card> foundation2 = new ArrayList<Card>(13);
+	public List<Card> foundation3 = new ArrayList<Card>(13);
 	// the board cards
 //	public List<Card> tab0 = new ArrayList<Card>();
 //	public List<Card> tab1 = new ArrayList<Card>();
@@ -434,6 +434,12 @@ public final class Game {
 			ret.foundation3.add(c);
 		}
 		
+		ret.turn = this.turn;
+		ret.lastFlipCount = this.lastFlipCount;
+		ret.gameOver = this.gameOver;
+		ret.deckFlips = this.deckFlips;
+		ret.playsMade = this.playsMade;
+		
 		return ret;
 	}
 	
@@ -790,7 +796,7 @@ public final class Game {
 		{
 			Position tmpPos = getBoard().get((tab*getBoardHeight()) + y);
 			GamePiece piece = tmpPos.getPiece();
-			if (piece.getCard() != null)
+			if (piece.getCard() != null || hiddenPiece.equals(piece))
 			{
 				if (piece.isFlipped())
 					return tmpPos;
@@ -807,7 +813,7 @@ public final class Game {
 		{
 			Position tmpPos = getBoard().get((tab*getBoardHeight()) + y);
 			GamePiece piece = tmpPos.getPiece();
-			if (piece.getCard() != null)
+			if (piece.getCard() != null || hiddenPiece.equals(piece))
 			{
 				if (piece.isFlipped())
 					return null;
@@ -868,7 +874,7 @@ public final class Game {
 	
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
-		boolean testing = true;
+		boolean testing = false;
 		List<Move> validMoves = new ArrayList<Move>();
 		if (testing) {
 			if (!(deck.size() == 0 && deckFlips >= maxDeckFlips))
@@ -958,7 +964,7 @@ public final class Game {
 			//System.out.println("getValidMoves() == deckFlips: " + deckFlips + ", maxDeckFlips: " + maxDeckFlips + ", deckSize: " + deck.size());
 			validMoves.add(new Move(null,board.get(deckPos)));
 		}
-		
+		boolean toFoundationAdded = false;
 		for(Position toPos : toCards) {
 			//System.out.println("to POS: " + toPos);
 			for(Position fromPos : fromCards) {
@@ -968,14 +974,18 @@ public final class Game {
 				Suit fromSuit = fromPos.getPiece().getCard().suit;
 				if(toPos.isFoundation()) { // placing a card in foundation
 					if(fromRank == 1 && !fromPos.isFoundation()) { // check if foundation is empty for ace moves
-						if(foundation0.size() == 0 && toPos.getFoundationNum() == 0) {
+						if(foundation0.size() == 0 && toPos.getFoundationNum() == 0 && !toFoundationAdded) {
 							validMoves.add(new Move(fromPos, board.get(f0Pos)));
-						} else if(foundation1.size() == 0 && toPos.getFoundationNum() == 1) {
+							toFoundationAdded = true;
+						} else if(foundation1.size() == 0 && toPos.getFoundationNum() == 1 && !toFoundationAdded) {
 							validMoves.add(new Move(fromPos, board.get(f1Pos)));
-						} else if(foundation2.size() == 0 && toPos.getFoundationNum() == 2) {
+							toFoundationAdded = true;
+						} else if(foundation2.size() == 0 && toPos.getFoundationNum() == 2 && !toFoundationAdded) {
 							validMoves.add(new Move(fromPos, board.get(f2Pos)));
-						} else if(foundation3.size() == 0 && toPos.getFoundationNum() == 3) {
+							toFoundationAdded = true;
+						} else if(foundation3.size() == 0 && toPos.getFoundationNum() == 3 && !toFoundationAdded) {
 							validMoves.add(new Move(fromPos, board.get(f3Pos)));
+							toFoundationAdded = true;
 						} 
 						continue;
 					}

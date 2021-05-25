@@ -213,7 +213,7 @@ public class HiddenMCTSSolution extends Agent {
 	{
 		List<Move> validMoves = n.state.getValidMoves(n.state.board, 1);
 		Game newG = n.state;
-		while (newG.isWinningBoard(newG.board) == 0 && !validMoves.isEmpty())
+		while (newG.isWinningBoard(newG.board) == 0 && !validMoves.isEmpty() && !isLooping(n))
 		{
 			int randInt = rand.nextInt(validMoves.size());
 			try {
@@ -263,6 +263,20 @@ public class HiddenMCTSSolution extends Agent {
 		
 		// return the move with highest win percentage
 		return bestChild;
+	}
+	
+	private boolean isLooping(Node node) {
+		if(node.parent != null && node.parent.parent != null &&
+				node.parent.parent.state.board.equals(node.state.board)) {
+			System.out.println(node.state.board);
+			System.out.println(node.parent.parent.state.board);
+			node.parent.parent.state.printBoardText(node.parent.parent.state.board);
+			System.out.println("Current board");
+			node.state.printBoardText(node.state.board);
+			System.out.println("IS LOOPING NODE");
+			return true;
+		}
+		else return false;
 	}
 	
 	private class Node

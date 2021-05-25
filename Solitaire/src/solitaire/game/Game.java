@@ -15,7 +15,7 @@ import solitaire.agent.Human;
 public final class Game {
 	private static final Random rand = new Random();
 	public List<Position> board;
-	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 50, deckFlips = 0, maxDeckFlips = 2;
+	public int turn = 1, boardWidth = 7, boardHeight = 20, playsMade = 0, maxPlays = 300, deckFlips = 0, maxDeckFlips = 2;
 	public int deckPos = boardWidth*boardHeight, wastePos = deckPos+1, f0Pos=deckPos+2, f1Pos=deckPos+3, f2Pos=deckPos+4, f3Pos=deckPos+5; 
 	// unflipped cards
 	public List<Card> deck = new ArrayList<Card>(24);

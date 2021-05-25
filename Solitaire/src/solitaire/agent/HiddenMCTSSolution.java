@@ -88,7 +88,7 @@ public class HiddenMCTSSolution extends Agent {
         Date timeDueDate = new Date(timeDue); 
 		System.out.println("time due: " + format.format(timeDueDate));
 		
-		int iters = 0, maxIter = 100000;
+		int iters = 0, maxIter = 300000;
 		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
 		{
 			//System.out.println("New MCTS iteration: " + iters);
@@ -213,11 +213,19 @@ public class HiddenMCTSSolution extends Agent {
 	{
 		List<Move> validMoves = n.state.getValidMoves(n.state.board, 1);
 		Game newG = n.state;
-		while (newG.isWinningBoard(newG.board) == 0 && !validMoves.isEmpty() && !isLooping(n))
+		Game parentG = null;
+		Game gParentG = null;
+		Move lastMove = null;
+		System.out.println("START SIMULATION");
+		newG.printGame();
+		while (newG.isWinningBoard(newG.board) == 0 && !validMoves.isEmpty() && !isLooping(newG, parentG, gParentG))
 		{
+			if (parentG != null) gParentG = parentG;
+			parentG = newG;
 			int randInt = rand.nextInt(validMoves.size());
 			try {
 				newG = newG.hiddenInfoSimulateMove(newG.board, validMoves.get(randInt));
+				lastMove = validMoves.get(randInt);
 			}
 			catch (Exception e)
 			{
@@ -228,7 +236,13 @@ public class HiddenMCTSSolution extends Agent {
 			}
 			validMoves = newG.getValidMoves(newG.board, 1);
 		}
-		
+		System.out.println("END SIMULATION");
+		System.out.println("isWinning: " + newG.isWinningBoard(newG.board)
+				+ ", validMOves: " + !validMoves.isEmpty() 
+				+ ", isLooping: " + isLooping(newG, parentG, gParentG));
+		System.out.println("last move: " + lastMove);
+		newG.printGame();
+		gParentG.printGame();
 		return newG.getBoardScore(newG.board);
 		//return newG.isWinningBoard(newG.board);
 	}
@@ -265,15 +279,16 @@ public class HiddenMCTSSolution extends Agent {
 		return bestChild;
 	}
 	
-	private boolean isLooping(Node node) {
-		if(node.parent != null && node.parent.parent != null &&
-				node.parent.parent.state.board.equals(node.state.board)) {
-			System.out.println(node.state.board);
-			System.out.println(node.parent.parent.state.board);
-			node.parent.parent.state.printBoardText(node.parent.parent.state.board);
-			System.out.println("Current board");
-			node.state.printBoardText(node.state.board);
-			System.out.println("IS LOOPING NODE");
+	private boolean isLooping(Game newG, Game parentG, Game gParentG) {
+		if(parentG != null && gParentG != null &&
+				gParentG.board.equals(newG.board) &&
+				gParentG.waste.equals(newG.waste)) {
+			//System.out.println(node.state.board);
+			//System.out.println(node.parent.parent.state.board);
+			//node.parent.parent.state.printBoardText(node.parent.parent.state.board);
+			//System.out.println("Current board");
+			//node.state.printBoardText(node.state.board);
+			//System.out.println("IS LOOPING NODE");
 			return true;
 		}
 		else return false;

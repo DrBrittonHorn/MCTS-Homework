@@ -19,7 +19,7 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor implements Runnable{
-	private long runTime = 4000;
+	private long runTime = 5000;
 	private long timeBuffer = 1000;
 	private Class agentType;
 //	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
@@ -149,7 +149,7 @@ public class Executor implements Runnable{
 				
 				gv.repaint();
 				try {
-					Thread.sleep(2050);
+					Thread.sleep(50);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -157,7 +157,7 @@ public class Executor implements Runnable{
 			}
 		}
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

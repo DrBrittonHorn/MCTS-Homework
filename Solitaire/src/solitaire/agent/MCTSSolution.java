@@ -19,6 +19,7 @@ public class MCTSSolution extends Agent {
 	private static final Random rand = new Random();
 	Node root = null;
 	private static int nextID = 0;
+	private Game prevState;
 
 	@Override
 	public Move getMove(Game game, long timeLimit) 
@@ -59,6 +60,7 @@ public class MCTSSolution extends Agent {
 		}
 		root = ret;
 		root.parent = null;
+		prevState = root.boardState;
 		return ret.moveToGetHere;
 	}
 	
@@ -301,14 +303,18 @@ public class MCTSSolution extends Agent {
 		int turn = leaf.turn;
 		// copy board so we don't mess any future nodes up
 		Game rolloutBoard = leaf.boardState;//.clone();
+		Game parentG = null;
+		Game gParentG = null;
 		// get possible next moves
 		List<Move> validMoves = rolloutBoard.getValidMoves(rolloutBoard.board, turn);
 		
 		// continue getting the next board until we reach a terminal state
 		int i = 0;
 		//System.out.println("Rolling out");
-		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays)// && i < 50)
+		while (rolloutBoard.isWinningBoard(rolloutBoard.board) == 0 && !validMoves.isEmpty() && rolloutBoard.playsMade <= rolloutBoard.maxPlays && !isLooping(rolloutBoard, parentG, gParentG))// && i < 50)
 		{
+			if (parentG != null) gParentG = parentG;
+			parentG = rolloutBoard;
 			i++;
 			//if ((i % 100) == 0)
 			//	System.out.println("another rollout level: " + i);
@@ -404,9 +410,9 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-//			child.printNodeStats();
+			child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
-			if (childAvgScore > bestAvgScore)
+			if (childAvgScore > bestAvgScore && !child.boardState.equals(prevState))
 			{
 				bestAvgScore = childAvgScore;
 				bestChild = child;
@@ -488,6 +494,21 @@ public class MCTSSolution extends Agent {
 			}
 		}
 		return num;
+	}
+	
+	private boolean isLooping(Game newG, Game parentG, Game gParentG) {
+		if(parentG != null && gParentG != null &&
+				gParentG.board.equals(newG.board) &&
+				gParentG.waste.equals(newG.waste)) {
+			//System.out.println(node.state.board);
+			//System.out.println(node.parent.parent.state.board);
+			//node.parent.parent.state.printBoardText(node.parent.parent.state.board);
+			//System.out.println("Current board");
+			//node.state.printBoardText(node.state.board);
+			//System.out.println("IS LOOPING NODE");
+			return true;
+		}
+		else return false;
 	}
 	
 	

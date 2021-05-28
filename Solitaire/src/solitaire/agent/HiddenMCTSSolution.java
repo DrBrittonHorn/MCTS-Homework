@@ -16,6 +16,7 @@ public class HiddenMCTSSolution extends Agent {
 	private static final Random rand = new Random();
 	Node root = null;
 	private static int nextID = 0;
+	private Game prevState;
 	
 	@Override
 	public Move getMove(Game game, long timeDue) {
@@ -45,6 +46,7 @@ public class HiddenMCTSSolution extends Agent {
 		System.out.println("*********** Finished MCTS *************");
 		root = null;
 		System.out.println("Returning move: " + ret.moveToGetHere);
+		prevState = root.state;
 		return ret.moveToGetHere;
 	}
 	
@@ -216,8 +218,8 @@ public class HiddenMCTSSolution extends Agent {
 		Game parentG = null;
 		Game gParentG = null;
 		Move lastMove = null;
-		System.out.println("START SIMULATION");
-		newG.printGame();
+		//System.out.println("START SIMULATION");
+		//newG.printGame();
 		while (newG.isWinningBoard(newG.board) == 0 && !validMoves.isEmpty() && !isLooping(newG, parentG, gParentG))
 		{
 			if (parentG != null) gParentG = parentG;
@@ -236,13 +238,13 @@ public class HiddenMCTSSolution extends Agent {
 			}
 			validMoves = newG.getValidMoves(newG.board, 1);
 		}
-		System.out.println("END SIMULATION");
-		System.out.println("isWinning: " + newG.isWinningBoard(newG.board)
-				+ ", validMOves: " + !validMoves.isEmpty() 
-				+ ", isLooping: " + isLooping(newG, parentG, gParentG));
-		System.out.println("last move: " + lastMove);
-		newG.printGame();
-		gParentG.printGame();
+//		System.out.println("END SIMULATION");
+//		System.out.println("isWinning: " + newG.isWinningBoard(newG.board)
+//				+ ", validMOves: " + !validMoves.isEmpty() 
+//				+ ", isLooping: " + isLooping(newG, parentG, gParentG));
+//		System.out.println("last move: " + lastMove);
+//		newG.printGame();
+//		gParentG.printGame();
 		return newG.getBoardScore(newG.board);
 		//return newG.isWinningBoard(newG.board);
 	}
@@ -268,7 +270,7 @@ public class HiddenMCTSSolution extends Agent {
 		{
 			child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
-			if (childAvgScore > bestAvgScore)
+			if (childAvgScore > bestAvgScore && !child.state.equals(prevState))
 			{
 				bestAvgScore = childAvgScore;
 				bestChild = child;

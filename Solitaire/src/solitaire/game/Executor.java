@@ -31,9 +31,9 @@ public class Executor implements Runnable{
 		Executor exec = new Executor();
 //		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
-//		exec.runGame(new MCTSSolution());
+		exec.runGame(new MCTSSolution());
 //		exec.runHeadlessGame(new MCTSSolution(), 5);
-		exec.runGame(new HiddenMCTSSolution());
+//		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
 //		runThreaded();
 	}
@@ -140,7 +140,15 @@ public class Executor implements Runnable{
 			if (agent1.responded)
 			{
 				//System.out.println("Human responded");
-				game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
+				if (agent1.getClass().equals(MCTSSolution.class))
+				{
+					game.advanceGame(agent1.getMove(game, runTime));
+				}
+				else if (agent1.getClass().equals(HiddenMCTSSolution.class))
+				{
+					game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
+				}
+
 				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
 				{
 					System.out.println("Agent 1 took too long to respond");

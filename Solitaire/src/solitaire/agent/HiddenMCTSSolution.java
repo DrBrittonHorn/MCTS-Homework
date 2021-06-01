@@ -44,9 +44,10 @@ public class HiddenMCTSSolution extends Agent {
 			return null;
 		}
 		System.out.println("*********** Finished MCTS *************");
+		prevState = root.state;
 		root = null;
 		System.out.println("Returning move: " + ret.moveToGetHere);
-		prevState = root.state;
+		
 		return ret.moveToGetHere;
 	}
 	

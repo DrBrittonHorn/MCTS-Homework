@@ -858,22 +858,6 @@ public final class Game {
 		return this.gameOver;
 	}
 	
-	private void checkValidBoard(int[][] tempBoard)
-	{
-		if (tempBoard.length != 3)
-		{
-			new Exception("Invalid board width.");
-			System.exit(-1);
-		}
-		if (tempBoard[0].length != 3 ||
-				tempBoard[1].length != 3 ||
-				tempBoard[2].length != 3)
-		{
-			new Exception("Invalid board height.");
-			System.exit(-1);
-		}
-	}
-	
 	public List<Move> getValidMoves(List<Position> origBoard, int turn)
 	{
 		boolean testing = false;
@@ -1428,7 +1412,7 @@ public final class Game {
 				&& this.isSingleFlip == g.isSingleFlip
 				&& this.deckFlips == g.deckFlips
 				&& this.lastFlipCount == g.lastFlipCount
-				&& this.playsMade == g.playsMade
+				//&& this.playsMade == g.playsMade
 				&& this.board.equals(g.board)
 				&& this.deck.equals(g.deck)
 				&& this.waste.equals(g.waste)

@@ -4,7 +4,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +19,6 @@ import solitaire.agent.MCTSSolution;
 import solitaire.agent.RandomAgent;
 
 
-
 public class Executor implements Runnable{
 	private long runTime = 5000;
 	private long timeBuffer = 1000;
@@ -26,14 +27,15 @@ public class Executor implements Runnable{
 	private static final int NTHREDS = 1;
 	private static final int times = NTHREDS;
 	private int finalscore;
+	private static int nextID = 0;
 	
 	public static void main(String[] args) throws InterruptedException {
 		Executor exec = new Executor();
 //		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
-		exec.runGame(new MCTSSolution());
+//		exec.runGame(new MCTSSolution());
 //		exec.runHeadlessGame(new MCTSSolution(), 5);
-//		exec.runGame(new HiddenMCTSSolution());
+		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
 //		runThreaded();
 	}
@@ -101,11 +103,129 @@ public class Executor implements Runnable{
 //		new MCTSSolution().getMove(game, 1000);
 	}
 	
+	private boolean isLooping(Game nextState, Game prevState)
+	{
+		if(prevState != null &&
+				prevState.board.equals(nextState.board) &&
+				prevState.waste.equals(nextState.waste)) {
+			//System.out.println(node.state.board);
+			//System.out.println(node.parent.parent.state.board);
+			//node.parent.parent.state.printBoardText(node.parent.parent.state.board);
+			//System.out.println("Current board");
+			//node.state.printBoardText(node.state.board);
+			//System.out.println("IS LOOPING NODE");
+			return true;
+		}
+		else return false;
+	}
+	
+	private void createGameTree(Game origGame)
+	{
+		class Node{
+			int id;
+			int depth;
+			ArrayList<Move> movesMade;
+			Node parent;
+			ArrayList<Node> children = new ArrayList<Node>();
+			boolean isTerminal;
+			double score;
+			Node(){
+				this.id = nextID++;
+			}
+		}
+		System.out.println("Creating game tree.");
+		int maxDepth = 15;
+		Queue<Node> nodes = new LinkedList<Node>();
+		Node treeRoot = new Node();
+		treeRoot.depth = 0;
+		treeRoot.movesMade = new ArrayList<Move>();
+		nodes.add(treeRoot);
+		boolean isRoot = true;
+		int depthCreated = 0;
+		while(!nodes.isEmpty())
+		{
+			Node current = nodes.poll();
+			if (current.depth > depthCreated) 
+			{
+				depthCreated = current.depth;
+				System.out.println("Reached depth: " + depthCreated + " on node " + current.id);
+			}
+			if (current.isTerminal) continue;
+			Game state = origGame;
+			Game prevState = null;
+			if (current.parent != null) isRoot = false;
+			// build current board
+			for (Move m : current.movesMade)
+			{
+				prevState = state;
+				state = state.simulateMove(origGame.board, m);
+			}
+			for (Move m : state.getValidMoves(state.board, state.turn))
+			{
+				Game newState = state.simulateMove(state.board, m);
+				Node newChild = new Node();
+				newChild.movesMade = new ArrayList<Move>(current.movesMade);
+				newChild.movesMade.add(m);
+				newChild.parent = current;
+				newChild.depth = current.depth + 1;
+				
+				// check if terminal node
+				if (state.isWinningBoard(state.board) != 0 || 
+						state.getValidMoves(state.board, state.turn).isEmpty() ||
+						state.maxPlays <= state.playsMade)
+				{
+					newChild.isTerminal = true;
+					newChild.score = state.getBoardScore(state.board);
+				}
+				
+				if (newChild.depth <= maxDepth && 
+						(isRoot || !isLooping(newState,prevState)))
+				{
+					current.children.add(newChild);
+					nodes.add(newChild);
+				}
+			}
+			
+		}
+
+		LinkedList<Node> q = new LinkedList<Node>();
+		Node rover = null;
+		int depth = treeRoot.depth;
+		q.add(treeRoot);
+		while (!q.isEmpty())
+		{
+			rover = q.remove();
+			//rover.printNode();
+			if (rover.depth > depth)
+			{
+				depth = rover.depth;
+				System.out.println("*********************** LEVEL " + depth + " *********************");
+			}
+			System.out.println("id: " + rover.id + ", parent: " + 
+					(rover.parent == null ? " " : rover.parent.id) + 
+					", move to get here: " + (rover.id == 0 ? "[]" : rover.movesMade.get(rover.movesMade.size()-1)) + 
+					", isTerminal: " + rover.isTerminal);
+			//rover.printNode(););
+			for (Node child : rover.children)
+			{
+				q.add(child);
+			}
+		}
+			
+		System.out.println("Completed game tree creation.");
+	}
+	
 	private void runGame(Agent agent1)
 	{
+		boolean testing = false;
 		Game game = new Game();
 		game.printDeck(game.deck);
 		game.printBoardText(game.board);
+		if (testing)
+		{
+			createGameTree(game);
+			return;
+		}
 		/*for (Position p : game.getValidMoves(game.getBoard(), game.getTurn()))
 		{
 			System.out.println(p.getPiece().getOwner() + ": " + p.getX() + "," + p.getY());
@@ -142,11 +262,23 @@ public class Executor implements Runnable{
 				//System.out.println("Human responded");
 				if (agent1.getClass().equals(MCTSSolution.class))
 				{
-					game.advanceGame(agent1.getMove(game, runTime));
+					Move m = agent1.getMove(game, runTime);
+					if (m == null)
+					{
+						System.out.println("Agent returned null. Ending game.");
+						break;
+					}
+					game.advanceGame(m);
 				}
 				else if (agent1.getClass().equals(HiddenMCTSSolution.class))
 				{
-					game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
+					Move m = agent1.getMove(game.createHiddenInfoVersion(), runTime);
+					if (m == null)
+					{
+						System.out.println("Agent returned null. Ending game.");
+						break;
+					}
+					game.advanceGame(m);
 				}
 
 				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))

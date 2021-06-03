@@ -20,6 +20,16 @@ public class MCTSSolution extends Agent {
 	Node root = null;
 	private static int nextID = 0;
 	private Game prevState;
+	private int id;
+	
+	public MCTSSolution(int id)
+	{
+		this.id = id;
+	}
+	public MCTSSolution()
+	{
+		
+	}
 
 	@Override
 	public Move getMove(Game game, long timeLimit) 
@@ -132,6 +142,7 @@ public class MCTSSolution extends Agent {
 				//System.out.println("checking node expansion");
 				checkNodeExpansion(node.parent);
 			}
+			Thread.yield();
 		}
 		// more time logging
 		System.out.println("iteration count: " + (iterationCount-1));

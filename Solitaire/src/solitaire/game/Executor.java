@@ -20,24 +20,25 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor implements Runnable{
-	private long runTime = 5000;
+	private long runTime = 1000;
 	private long timeBuffer = 1000;
 	private Class agentType;
-//	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
-	private static final int NTHREDS = 1;
+	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
+//	private static final int NTHREDS = 2;
 	private static final int times = NTHREDS;
 	private int finalscore;
 	private static int nextID = 0;
+	private int id;
 	
 	public static void main(String[] args) throws InterruptedException {
 		Executor exec = new Executor();
 //		exec.runGame(new Human());
 //		exec.runGame(new RandomAgent());
 //		exec.runGame(new MCTSSolution());
-//		exec.runHeadlessGame(new MCTSSolution(), 5);
-		exec.runGame(new HiddenMCTSSolution());
+//		exec.runHeadlessGame(new HiddenMCTSSolution(), 5);
+//		exec.runGame(new HiddenMCTSSolution());
 //		exec.testGame();
-//		runThreaded();
+		runThreaded();
 	}
 	
 	private static void runThreaded() throws InterruptedException
@@ -48,7 +49,7 @@ public class Executor implements Runnable{
 		ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
         for (int i = 0; i < times; i++) {
 //            Runnable worker = new Executor(MCTSSolution.class);
-            Runnable worker = new Executor(HiddenMCTSSolution.class);
+            Runnable worker = new Executor(HiddenMCTSSolution.class, i);
             executor.execute(worker);
             allTasks.add(worker);
         }
@@ -60,14 +61,16 @@ public class Executor implements Runnable{
         System.out.println("Finished all threads");
         for (Runnable r : allTasks)
         {
+        	System.out.println("id: " + ((Executor)r).id);
         	System.out.println("score: " + ((Executor)r).getScore());
         	totalScore += ((Executor)r).getScore();
         }
         System.out.println("Avg: " + (totalScore/(double)times));
 	}
 	
-	Executor(Class agentType) {
+	Executor(Class agentType, int id) {
 		this.agentType = agentType;
+		this.id = id;
 	}
 	
 	public Executor() {	}
@@ -315,6 +318,11 @@ public class Executor implements Runnable{
 				System.out.println("Equal!");
 				agent1 = new MCTSSolution();
 			}
+			if (agent1.getClass().equals(HiddenMCTSSolution.class))
+			{
+				System.out.println("HiddenInfo Equal!");
+				agent1 = new HiddenMCTSSolution();
+			}
 			else
 			{
 				System.out.println("Class mismatch. Ending.");
@@ -329,7 +337,27 @@ public class Executor implements Runnable{
 				if (agent1.responded)
 				{
 					//System.out.println("Human responded");
-					game.advanceGame(agent1.getMove(game, runTime));
+					if (agent1.getClass().equals(MCTSSolution.class))
+					{
+						Move m = agent1.getMove(game, runTime);
+						if (m == null)
+						{
+							System.out.println("Agent returned null. Ending game.");
+							break;
+						}
+						game.advanceGame(m);
+					}
+					else if (agent1.getClass().equals(HiddenMCTSSolution.class))
+					{
+						Move m = agent1.getMove(game.createHiddenInfoVersion(), runTime);
+						if (m == null)
+						{
+							System.out.println("Agent returned null. Ending game.");
+							break;
+						}
+						game.advanceGame(m);
+					}
+					
 					if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
 					{
 						System.out.println("Agent 1 took too long to respond");
@@ -351,12 +379,12 @@ public class Executor implements Runnable{
 		if (agentType.equals(MCTSSolution.class))
 		{
 			System.out.println("MCTSSolution!");
-			agent1 = new MCTSSolution();
+			agent1 = new MCTSSolution(this.id);
 		}
 		else if (agentType.equals(HiddenMCTSSolution.class))
 		{
 			System.out.println("HiddenMCTS!");
-			agent1 = new HiddenMCTSSolution();
+			agent1 = new HiddenMCTSSolution(this.id);
 		}
 		else
 		{
@@ -373,21 +401,45 @@ public class Executor implements Runnable{
 			{
 				//System.out.println("Human responded");
 				if (agentType.equals(MCTSSolution.class))
-					game.advanceGame(agent1.getMove(game, runTime));
+				{
+					Move m = agent1.getMove(game, runTime);
+					if (m == null)
+					{
+						System.out.println("Agent returned null. Ending game.");
+						break;
+					}
+					game.advanceGame(m);
+				}
 				else if (agentType.equals(HiddenMCTSSolution.class))
-					game.advanceGame(agent1.getMove(game.createHiddenInfoVersion(), runTime));
+				{
+					Move m = agent1.getMove(game.createHiddenInfoVersion(), runTime);
+					if (m == null)
+					{
+						System.out.println("Agent returned null. Ending game.");
+						break;
+					}
+					game.advanceGame(m);
+				}
 				else
-					game.advanceGame(agent1.getMove(game, runTime));
+				{
+					Move m = agent1.getMove(game, runTime);
+					if (m == null)
+					{
+						System.out.println("Agent returned null. Ending game.");
+						break;
+					}
+					game.advanceGame(m);
+				}
 				if (start + runTime + timeBuffer < System.currentTimeMillis() && !(agent1 instanceof Human))
 				{
 					System.out.println("Agent 1 took too long to respond");
 				}
-				System.out.println("After play game: ");
-				game.printGame();
+				//System.out.println("After play game: ");
+				//game.printGame();
 				start = System.currentTimeMillis();
 			}
 		}
-		System.out.println("GAME FINISHED RUNNING");
+		System.out.println("GAME FINISHED RUNNING -- " + this.id);
 		game.printGame();
 		this.finalscore = game.getNumberOfCardsInFoundation();
 	}

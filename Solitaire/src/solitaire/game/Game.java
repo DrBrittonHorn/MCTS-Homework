@@ -1180,13 +1180,14 @@ public final class Game {
 		return g;
 	}
 	
-	public Game hiddenInfoSimulateMove(List<Position> board, Move move) {
-		Game g = this.clone();
+	public Game hiddenInfoSimulateMove(List<Position> board, Move move) 
+	{
 		if (isWinningBoard(board) != 0)
 		{
 			System.out.println("Game already won by: " + isWinningBoard(board));
 			return null;
 		}
+		Game g = this.clone();
 		//make next piece be a Card if hidden; if not, advance like normal
 		if(move.getToPosition().getPiece() == hiddenPiece) {
 			//set new piece
@@ -1225,6 +1226,62 @@ public final class Game {
 		//g.printGame();
 		return g;
 	}
+	/*
+	public ArrayList<Game> getAllMoveOutcomes(List<Position> board, Move move)
+	{
+		if (isWinningBoard(board) != 0)
+		{
+			System.out.println("Game already won by: " + isWinningBoard(board));
+			return null;
+		}
+		ArrayList<Game> outcomes = new ArrayList<Game>();
+		Game origGame = this.clone();
+		//make next piece be a Card if hidden; if not, advance like normal
+		if(move.getToPosition().getPiece() == hiddenPiece)
+		{
+			//set new piece
+			List<Card> allCards = new ArrayList<Card>();
+			for (Suit s : Suit.values())
+			{
+				for (int i = 1; i <= 13; i++)
+				{
+					Card c = new Card(i, s);
+					allCards.add(c);
+				}
+			}
+			Card newCard = null;
+			if (deckFlips > 0) allCards.removeAll(deck);
+			allCards.removeAll(waste);
+			for (int tab = 0; tab < boardWidth; tab++)
+			{
+				Position pos = getLastFlippedCardInTab(tab);
+				while(pos!=null && pos.getPiece().isFlipped()) {
+					allCards.remove(pos.getPiece().getCard());
+					if(pos.getY() != 0) 
+						pos = g.board.get((pos.getX()*boardHeight)+pos.getY()-1);
+					break;
+				}
+			}
+			allCards.removeAll(foundation0);
+			allCards.removeAll(foundation1);
+			allCards.removeAll(foundation2);
+			allCards.removeAll(foundation3);
+//			System.out.println("Unseen cards: ");
+//			for(Card c: allCards) System.out.println(c.toString());
+			newCard = allCards.get(rand.nextInt(allCards.size()));
+			move.getToPosition().setPiece(new GamePiece(false, 0, newCard));
+		}
+		else
+		{
+			origGame.advanceGame(move);
+			outcomes.add(origGame);
+		}
+		
+		//g.printGame();
+		return outcomes;
+	}
+	*/
+	
 	public Card getTopFoundationCard(int foundationNum)
 	{
 		Card ret = null;

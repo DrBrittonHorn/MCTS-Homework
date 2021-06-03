@@ -15,12 +15,22 @@ public class HiddenMCTSSolution extends Agent {
 	private Game game = null;
 	private static final Random rand = new Random();
 	Node root = null;
-	private static int nextID = 0;
+	private int nextID = 0;
 	private Game prevState;
+	private int id;
+	
+	public HiddenMCTSSolution(int id)
+	{
+		this.id = id;
+	}
+	public HiddenMCTSSolution()
+	{
+		
+	}
 	
 	@Override
 	public Move getMove(Game game, long timeDue) {
-		System.out.println("*********** Starting MCTS *************");
+		//System.out.println("*********** Starting MCTS *************");
 		this.game = game;
 		if (root == null)
 		{
@@ -31,7 +41,7 @@ public class HiddenMCTSSolution extends Agent {
 		root.depth = 0;
 		for (Move m : root.state.getValidMoves(root.state.board, 1))
 		{
-			System.out.println(m.toString());
+			//System.out.println(m.toString());
 			//root.state.hiddenInfoSimulateMove(root.state.board, m);
 		}
 		performMCTS(timeDue);
@@ -43,10 +53,10 @@ public class HiddenMCTSSolution extends Agent {
 			System.out.println("Returning null from MCTS");
 			return null;
 		}
-		System.out.println("*********** Finished MCTS *************");
+		//System.out.println("*********** Finished MCTS *************");
 		prevState = root.state;
 		root = null;
-		System.out.println("Returning move: " + ret.moveToGetHere);
+		//System.out.println("Returning move: " + ret.moveToGetHere);
 		
 		return ret.moveToGetHere;
 	}
@@ -86,10 +96,10 @@ public class HiddenMCTSSolution extends Agent {
 		DateFormat format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS"); 
 		long startTime = System.currentTimeMillis();
         Date startDate = new Date(startTime); 
-		System.out.println("start time: " + format.format(startDate));
+		//System.out.println("start time: " + format.format(startDate));
 		long timeDue = System.currentTimeMillis() + timeLimit;
         Date timeDueDate = new Date(timeDue); 
-		System.out.println("time due: " + format.format(timeDueDate));
+		//System.out.println("time due: " + format.format(timeDueDate));
 		
 		int iters = 0, maxIter = 300000;
 		while (System.currentTimeMillis() < timeDue && iters++ < maxIter)
@@ -129,6 +139,7 @@ public class HiddenMCTSSolution extends Agent {
 					n.parent.isFullyExpanded = true;
 				}
 			}
+			Thread.yield();
 		}
 	}
 	
@@ -214,6 +225,9 @@ public class HiddenMCTSSolution extends Agent {
 	
 	private double simulate(Node n)
 	{
+		if (n == null) System.out.println("Null node!");
+		else if (n.state == null) System.out.println("Null state!");
+		else if (n.state.board == null) System.out.println("Null board");
 		List<Move> validMoves = n.state.getValidMoves(n.state.board, 1);
 		Game newG = n.state;
 		Game parentG = null;
@@ -269,7 +283,7 @@ public class HiddenMCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : root.children)
 		{
-			child.printNodeStats();
+			//child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore && !child.state.equals(prevState))
 			{

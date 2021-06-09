@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import solitaire.agent.Agent;
+import solitaire.agent.Expectimax;
 import solitaire.agent.HiddenMCTSSolution;
 import solitaire.agent.Human;
 import solitaire.agent.MCTSSolution;
@@ -20,12 +21,12 @@ import solitaire.agent.RandomAgent;
 
 
 public class Executor implements Runnable{
-	private long runTime = 1000;
+	private long runTime = 10000;
 	private long timeBuffer = 1000;
 	private Class agentType;
 	private static final int NTHREDS = Runtime.getRuntime().availableProcessors();
 //	private static final int NTHREDS = 2;
-	private static final int times = NTHREDS;
+	private static final int times = 50;
 	private int finalscore;
 	private static int nextID = 0;
 	private int id;
@@ -37,6 +38,7 @@ public class Executor implements Runnable{
 //		exec.runGame(new MCTSSolution());
 //		exec.runHeadlessGame(new HiddenMCTSSolution(), 5);
 //		exec.runGame(new HiddenMCTSSolution());
+//		exec.runGame(new Expectimax());
 //		exec.testGame();
 		runThreaded();
 	}
@@ -46,6 +48,8 @@ public class Executor implements Runnable{
 		List<Runnable> allTasks = new ArrayList<Runnable>();
 		
 		int totalScore = 0;
+		int hiddenTotal = 0;
+		double hiddenCount = times;
 		ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
         for (int i = 0; i < times; i++) {
 //            Runnable worker = new Executor(MCTSSolution.class);
@@ -53,19 +57,29 @@ public class Executor implements Runnable{
             executor.execute(worker);
             allTasks.add(worker);
         }
+        for (int i = 0; i < times; i++) {
+          Runnable worker = new Executor(MCTSSolution.class,i);
+//          Runnable worker = new Executor(HiddenMCTSSolution.class, i);
+          executor.execute(worker);
+          allTasks.add(worker);
+      }
         // This will make the executor accept no new threads
         // and finish all existing threads in the queue
         executor.shutdown();
         // Wait until all threads are finish
-        executor.awaitTermination(10000000L, TimeUnit.MILLISECONDS);
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
         System.out.println("Finished all threads");
         for (Runnable r : allTasks)
         {
         	System.out.println("id: " + ((Executor)r).id);
         	System.out.println("score: " + ((Executor)r).getScore());
-        	totalScore += ((Executor)r).getScore();
+        	if (((Executor)r).agentType.equals(MCTSSolution.class))
+        		totalScore += ((Executor)r).getScore();
+        	else
+        		hiddenTotal += ((Executor)r).getScore();
         }
-        System.out.println("Avg: " + (totalScore/(double)times));
+        System.out.println("Hidden Avg: " + (hiddenTotal/hiddenCount));
+        System.out.println("Full info Avg: " + (totalScore/hiddenCount));
 	}
 	
 	Executor(Class agentType, int id) {

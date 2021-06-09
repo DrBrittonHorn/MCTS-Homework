@@ -111,7 +111,7 @@ public class MCTSSolution extends Agent {
 //		System.out.println("start time: " + format.format(startDate));
 		long timeDue = System.currentTimeMillis() + timeLimit;
         Date timeDueDate = new Date(timeDue); 
-		System.out.println("move: " + game.playsMade + ", start time: " + format.format(startDate) + ", time due: " + format.format(timeDueDate));
+//		System.out.println("move: " + game.playsMade + ", start time: " + format.format(startDate) + ", time due: " + format.format(timeDueDate));
 		
 		// start from root
 		Node node = root;
@@ -145,7 +145,7 @@ public class MCTSSolution extends Agent {
 			Thread.yield();
 		}
 		// more time logging
-		System.out.println("iteration count: " + (iterationCount-1));
+//		System.out.println("iteration count: " + (iterationCount-1));
 		long endTime = System.currentTimeMillis();
         Date endDate = new Date(endTime); 
 //		System.out.println("time end: " + format.format(endDate));
@@ -421,7 +421,7 @@ public class MCTSSolution extends Agent {
 		Node bestChild = null;
 		for (Node child : parent.children)
 		{
-			child.printNodeStats();
+//			child.printNodeStats();
 			double childAvgScore = (child.simulations == 0) ? 0.0 : (child.score / (double) child.simulations);
 			if (childAvgScore > bestAvgScore && !child.boardState.equals(prevState))
 			{
